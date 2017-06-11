@@ -36,5 +36,9 @@ message Geometry {
     enum Type {
         POINT = 0;
         LINESTRING = 1;
+        POLYGON = 2;
+        MULTIPOINT = 3;
+        MULTILINESTRING = 4;
+        MULTIPOLYGON = 5;
     }
 }
