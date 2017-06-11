@@ -22,9 +22,7 @@ package org.n52.tsf.model.jts.test;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.GeometryFactory;
-import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.geom.*;
 import org.n52.tsf.model.jts.PBSerializationHandler;
 
 import java.io.File;
@@ -35,7 +33,7 @@ import java.nio.file.Paths;
 
 import static org.junit.Assert.assertTrue;
 
-public class JTSModelPointTest {
+public class JTSModelPolygonTest {
 
     @Before
     public void setUp() throws Exception {
@@ -44,15 +42,35 @@ public class JTSModelPointTest {
     }
 
     @Test
-    public void testSerializeGeoPoint() throws Exception {
+    public void serializeGeoPolygonTestA() throws Exception {
         GeometryFactory geometryFactory = new GeometryFactory();
-        Coordinate coordinate = new Coordinate(1,2);
-        Point point = geometryFactory.createPoint(coordinate);
-        System.out.println("-------------- Serializing JTS Model Point via Protobuf -------------------------");
+        Polygon polygon = geometryFactory.createPolygon(new Coordinate[]{
+                new Coordinate(0, 0), new Coordinate(10, 0), new Coordinate(0, 10), new Coordinate(10, 10), new Coordinate(0, 0)});
+        System.out.println("-------------- Serializing JTS Model Polygon without holes via Protobuf -------------------------");
         PBSerializationHandler pbSerializer = new PBSerializationHandler();
         FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
         try {
-            pbSerializer.serialize(point,output);
+            pbSerializer.serialize(polygon, output);
+            System.out.println("Successfully Serialized....");
+        } finally {
+            output.close();
+        }
+        assertTrue(new File(Utils.TEST_FILE_LOCATION).length() > 0);
+    }
+
+    @Test
+    public void serializeGeoPolygonTestB() throws Exception {
+        GeometryFactory geometryFactory = new GeometryFactory();
+        LinearRing externalLR = geometryFactory.createLinearRing(new Coordinate[]{
+                new Coordinate(0, 0), new Coordinate(10, 0), new Coordinate(0, 10), new Coordinate(10, 10), new Coordinate(0, 0)});
+        LinearRing[] internallLRs = new LinearRing[]{geometryFactory.createLinearRing(new Coordinate[]{
+                new Coordinate(2, 2), new Coordinate(2, 3), new Coordinate(3, 3), new Coordinate(3, 2), new Coordinate(2, 2)})};
+        Polygon polygon = geometryFactory.createPolygon(externalLR, internallLRs);
+        System.out.println("----------------- Serializing JTS Model Polygon with holes via Protobuf -------------------------");
+        PBSerializationHandler pbSerializer = new PBSerializationHandler();
+        FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
+        try {
+            pbSerializer.serialize(polygon, output);
             System.out.println("Successfully Serialized....");
         } finally {
             output.close();

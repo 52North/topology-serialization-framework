@@ -24,7 +24,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
-import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.geom.MultiPoint;
 import org.n52.tsf.model.jts.PBSerializationHandler;
 
 import java.io.File;
@@ -35,8 +35,7 @@ import java.nio.file.Paths;
 
 import static org.junit.Assert.assertTrue;
 
-public class JTSModelPointTest {
-
+public class JTSModelMultipointTest {
     @Before
     public void setUp() throws Exception {
         Path filePath = Paths.get(Utils.TEST_FILE_LOCATION);
@@ -46,13 +45,13 @@ public class JTSModelPointTest {
     @Test
     public void testSerializeGeoPoint() throws Exception {
         GeometryFactory geometryFactory = new GeometryFactory();
-        Coordinate coordinate = new Coordinate(1,2);
-        Point point = geometryFactory.createPoint(coordinate);
-        System.out.println("-------------- Serializing JTS Model Point via Protobuf -------------------------");
+        MultiPoint multiPoint = geometryFactory.createMultiPoint(new Coordinate[]{
+                new Coordinate(0, 0), new Coordinate(1, 0), new Coordinate(1, 1)});
+        System.out.println("-------------- Serializing JTS Model MultiPoint via Protobuf -------------------------");
         PBSerializationHandler pbSerializer = new PBSerializationHandler();
         FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
         try {
-            pbSerializer.serialize(point,output);
+            pbSerializer.serialize(multiPoint, output);
             System.out.println("Successfully Serialized....");
         } finally {
             output.close();
