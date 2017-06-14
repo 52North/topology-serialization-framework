@@ -25,14 +25,17 @@ import org.junit.Test;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
+import org.n52.tsf.model.jts.PBDeserializationHandler;
 import org.n52.tsf.model.jts.PBSerializationHandler;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class JTSModelPointTest {
@@ -44,7 +47,7 @@ public class JTSModelPointTest {
     }
 
     @Test
-    public void testSerializeGeoPoint() throws Exception {
+    public void testGeoPoint() throws Exception {
         GeometryFactory geometryFactory = new GeometryFactory();
         Coordinate coordinate = new Coordinate(1,2);
         Point point = geometryFactory.createPoint(coordinate);
@@ -54,10 +57,16 @@ public class JTSModelPointTest {
         try {
             pbSerializer.serialize(point,output);
             System.out.println("Successfully Serialized....");
+            assertTrue(new File(Utils.TEST_FILE_LOCATION).length() > 0);
+
+            System.out.println("-------------- Deserializing JTS Model Point via Protobuf ------------------------");
+            PBDeserializationHandler pbDeserializationHandler = new PBDeserializationHandler();
+            Point pointDeserialized = (Point) pbDeserializationHandler.deserialize(new FileInputStream(Utils.TEST_FILE_LOCATION));
+            assertEquals(point, pointDeserialized);
+            System.out.println("Successfully Deserialized : " + pointDeserialized);
         } finally {
             output.close();
         }
-        assertTrue(new File(Utils.TEST_FILE_LOCATION).length() > 0);
     }
 
     @After

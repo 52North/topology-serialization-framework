@@ -1,20 +1,3 @@
-package org.n52.tsf.model.jts.test;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.GeometryFactory;
-import org.locationtech.jts.geom.LineString;
-import org.locationtech.jts.geom.MultiLineString;
-import org.n52.tsf.model.jts.PBSerializationHandler;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
 //
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -33,6 +16,23 @@ import java.nio.file.Paths;
 // specific language governing permissions and limitations
 // under the License.
 //
+
+package org.n52.tsf.model.jts.test;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.LineString;
+import org.locationtech.jts.geom.MultiLineString;
+import org.n52.tsf.model.jts.PBSerializationHandler;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import static org.junit.Assert.assertTrue;
 
