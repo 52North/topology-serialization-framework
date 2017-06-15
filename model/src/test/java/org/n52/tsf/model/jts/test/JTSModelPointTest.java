@@ -47,7 +47,7 @@ public class JTSModelPointTest {
     }
 
     @Test
-    public void testGeoPoint() throws Exception {
+    public void testSerializeGeoPoint() throws Exception {
         GeometryFactory geometryFactory = new GeometryFactory();
         Coordinate coordinate = new Coordinate(1,2);
         Point point = geometryFactory.createPoint(coordinate);
@@ -56,9 +56,22 @@ public class JTSModelPointTest {
         FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
         try {
             pbSerializer.serialize(point,output);
-            System.out.println("Successfully Serialized....");
-            assertTrue(new File(Utils.TEST_FILE_LOCATION).length() > 0);
+        } finally {
+            output.close();
+        }
+        assertTrue(new File(Utils.TEST_FILE_LOCATION).length() > 0);
+        System.out.println("Successfully Serialized....");
+    }
 
+    @Test
+    public void testDeserializeGeoPoint() throws Exception {
+        GeometryFactory geometryFactory = new GeometryFactory();
+        Coordinate coordinate = new Coordinate(1,2);
+        Point point = geometryFactory.createPoint(coordinate);
+        PBSerializationHandler pbSerializer = new PBSerializationHandler();
+        FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
+        try {
+            pbSerializer.serialize(point,output);
             System.out.println("-------------- Deserializing JTS Model Point via Protobuf ------------------------");
             PBDeserializationHandler pbDeserializationHandler = new PBDeserializationHandler();
             Point pointDeserialized = (Point) pbDeserializationHandler.deserialize(new FileInputStream(Utils.TEST_FILE_LOCATION));

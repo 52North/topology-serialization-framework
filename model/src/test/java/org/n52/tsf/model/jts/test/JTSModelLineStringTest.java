@@ -47,7 +47,7 @@ public class JTSModelLineStringTest {
     }
 
     @Test
-    public void testGeoLineString() throws Exception {
+    public void testSerializeGeoLineString() throws Exception {
         GeometryFactory geometryFactory = new GeometryFactory();
         LineString lineString = geometryFactory.createLineString(new Coordinate[]{
                 new Coordinate(0, 0), new Coordinate(1, 0), new Coordinate(1, 1)});
@@ -56,9 +56,22 @@ public class JTSModelLineStringTest {
         FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
         try {
             pbSerializer.serialize(lineString,output);
-            System.out.println("Successfully Serialized....");
-            assertTrue(new File(Utils.TEST_FILE_LOCATION).length() > 0);
+        } finally {
+            output.close();
+        }
+        assertTrue(new File(Utils.TEST_FILE_LOCATION).length() > 0);
+        System.out.println("Successfully Serialized....");
+    }
 
+    @Test
+    public void testDeserializeGeoLineString() throws Exception {
+        GeometryFactory geometryFactory = new GeometryFactory();
+        LineString lineString = geometryFactory.createLineString(new Coordinate[]{
+                new Coordinate(0, 0), new Coordinate(1, 0), new Coordinate(1, 1)});
+        PBSerializationHandler pbSerializer = new PBSerializationHandler();
+        FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
+        try {
+            pbSerializer.serialize(lineString,output);
             System.out.println("-------------- Deserializing JTS Model LineString via Protobuf -------------------------");
             PBDeserializationHandler pbDeserializationHandler = new PBDeserializationHandler();
             LineString lineStringDeserialized = (LineString) pbDeserializationHandler.deserialize(new FileInputStream(Utils.TEST_FILE_LOCATION));

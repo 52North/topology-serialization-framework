@@ -22,18 +22,18 @@ package org.n52.tsf.model.jts.test;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.GeometryFactory;
-import org.locationtech.jts.geom.LineString;
-import org.locationtech.jts.geom.MultiLineString;
+import org.locationtech.jts.geom.*;
+import org.n52.tsf.model.jts.PBDeserializationHandler;
 import org.n52.tsf.model.jts.PBSerializationHandler;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class JTSModelMultiLineStringTest {
@@ -44,7 +44,7 @@ public class JTSModelMultiLineStringTest {
     }
 
     @Test
-    public void testSerializeGeoLineString() throws Exception {
+    public void testSerializeGeoMultiLineString() throws Exception {
         GeometryFactory geometryFactory = new GeometryFactory();
         LineString lineString1 = geometryFactory.createLineString(new Coordinate[]{
                 new Coordinate(0, 0), new Coordinate(1, 0), new Coordinate(1, 1)});
@@ -56,11 +56,33 @@ public class JTSModelMultiLineStringTest {
         FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
         try {
             pbSerializer.serialize(multiLineString, output);
-            System.out.println("Successfully Serialized....");
         } finally {
             output.close();
         }
         assertTrue(new File(Utils.TEST_FILE_LOCATION).length() > 0);
+        System.out.println("Successfully Serialized....");
+    }
+
+    @Test
+    public void testDeserializeGeoMultiLineString() throws Exception {
+        GeometryFactory geometryFactory = new GeometryFactory();
+        LineString lineString1 = geometryFactory.createLineString(new Coordinate[]{
+                new Coordinate(0, 0), new Coordinate(1, 0), new Coordinate(1, 1)});
+        LineString lineString2 = geometryFactory.createLineString(new Coordinate[]{
+                new Coordinate(1, 1), new Coordinate(2, 1), new Coordinate(2, 2)});
+        MultiLineString multiLineString = geometryFactory.createMultiLineString(new LineString[]{lineString1, lineString2});
+        PBSerializationHandler pbSerializer = new PBSerializationHandler();
+        FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
+        try {
+            pbSerializer.serialize(multiLineString, output);
+            System.out.println("-------------- Deserializing JTS Model MultiLineString via Protobuf -------------------------");
+            PBDeserializationHandler pbDeserializationHandler = new PBDeserializationHandler();
+            MultiLineString multiLineStringDeserialized = (MultiLineString) pbDeserializationHandler.deserialize(new FileInputStream(Utils.TEST_FILE_LOCATION));
+            assertEquals(multiLineString, multiLineStringDeserialized);
+            System.out.println("Successfully Deserialized : " + multiLineStringDeserialized);
+        } finally {
+            output.close();
+        }
     }
 
     @After

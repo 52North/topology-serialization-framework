@@ -24,15 +24,19 @@ import org.junit.Before;
 import org.junit.Test;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.MultiPoint;
+import org.n52.tsf.model.jts.PBDeserializationHandler;
 import org.n52.tsf.model.jts.PBSerializationHandler;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class JTSModelMultipointTest {
@@ -52,11 +56,30 @@ public class JTSModelMultipointTest {
         FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
         try {
             pbSerializer.serialize(multiPoint, output);
-            System.out.println("Successfully Serialized....");
         } finally {
             output.close();
         }
         assertTrue(new File(Utils.TEST_FILE_LOCATION).length() > 0);
+        System.out.println("Successfully Serialized....");
+    }
+
+    @Test
+    public void testDeserializeGeoPoint() throws Exception {
+        GeometryFactory geometryFactory = new GeometryFactory();
+        MultiPoint multiPoint = geometryFactory.createMultiPoint(new Coordinate[]{
+                new Coordinate(0, 0), new Coordinate(1, 0), new Coordinate(1, 1)});
+        PBSerializationHandler pbSerializer = new PBSerializationHandler();
+        FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
+        try {
+            pbSerializer.serialize(multiPoint, output);
+            System.out.println("-------------- Deserializing JTS Model MultiPoint via Protobuf -------------------------");
+            PBDeserializationHandler pbDeserializationHandler = new PBDeserializationHandler();
+            MultiPoint multiPointDeserialized = (MultiPoint) pbDeserializationHandler.deserialize(new FileInputStream(Utils.TEST_FILE_LOCATION));
+            assertEquals(multiPoint, multiPointDeserialized);
+            System.out.println("Successfully Deserialized : " + multiPointDeserialized);
+        } finally {
+            output.close();
+        }
     }
 
     @After

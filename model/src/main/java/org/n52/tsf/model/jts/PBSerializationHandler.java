@@ -34,73 +34,66 @@ public class PBSerializationHandler {
 
 
     public void serialize(Geometry jtsGeometry, OutputStream outputStream) throws IOException {
+        GeoProtobuf.Geometry pbGeometry;
         if (jtsGeometry instanceof Point) {
-            serializePoint((Point) jtsGeometry, outputStream);
+            pbGeometry = serializePoint((Point) jtsGeometry);
         } else if (jtsGeometry instanceof LineString) {
-            serializeLineString((LineString) jtsGeometry, outputStream);
+            pbGeometry = serializeLineString((LineString) jtsGeometry);
         } else if (jtsGeometry instanceof Polygon) {
-            serializePolygon((Polygon) jtsGeometry, outputStream);
+            pbGeometry = serializePolygon((Polygon) jtsGeometry);
         } else if (jtsGeometry instanceof MultiPoint) {
-            serializeMultiPoint((MultiPoint) jtsGeometry, outputStream);
+            pbGeometry = serializeMultiPoint((MultiPoint) jtsGeometry);
         } else if (jtsGeometry instanceof MultiLineString) {
-            serializeMultiLineString((MultiLineString) jtsGeometry, outputStream);
+            pbGeometry = serializeMultiLineString((MultiLineString) jtsGeometry);
         } else {
-            logger.error("Unsupported Geometric type");
+            throw new IllegalArgumentException("Unsupported Geometric type");
         }
+        pbGeometry.writeTo(outputStream);
     }
 
-    public void serializePoint(Point jtsPoint, OutputStream outputStream) throws IOException {
+    private GeoProtobuf.Geometry serializePoint(Point jtsPoint) throws IOException {
         if (jtsPoint.getCoordinates().length == 0) {
-            logger.error("No Coordinate data available");
+            throw new IllegalArgumentException("No Coordinate data available");
         } else {
-            GeoProtobuf.Geometry.Builder geo = GeoProtobuf.Geometry.newBuilder();
-            geo.setType(GeoProtobuf.Geometry.Type.POINT);
-            geo.addCoordinates(createCoordinate(jtsPoint.getCoordinate()));
-            geo.build().writeTo(outputStream);
+            GeoProtobuf.Geometry.Builder geoPoint = GeoProtobuf.Geometry.newBuilder();
+            geoPoint.setType(GeoProtobuf.Geometry.Type.POINT);
+            geoPoint.addCoordinates(createCoordinate(jtsPoint.getCoordinate()));
+            return  geoPoint.build();
         }
     }
 
-    public void serializeLineString(LineString jtsLineString, OutputStream outputStream) throws IOException {
+    private GeoProtobuf.Geometry serializeLineString(LineString jtsLineString) throws IOException {
         if (jtsLineString.getCoordinates().length < 2) {
-            logger.error("Insufficient Coordinates");
+            throw new IllegalArgumentException("Insufficient Coordinates");
         } else {
-            GeoProtobuf.Geometry.Builder geo = GeoProtobuf.Geometry.newBuilder();
-            geo.setType(GeoProtobuf.Geometry.Type.LINESTRING);
+            GeoProtobuf.Geometry.Builder geoLineString = GeoProtobuf.Geometry.newBuilder();
+            geoLineString.setType(GeoProtobuf.Geometry.Type.LINESTRING);
             for (Coordinate coord : jtsLineString.getCoordinates()) {
-                geo.addCoordinates(createCoordinate(coord));
+                geoLineString.addCoordinates(createCoordinate(coord));
             }
-            geo.build().writeTo(outputStream);
+            return geoLineString.build();
         }
     }
 
-    public void serializeMultiPoint(MultiPoint jtsMultiPoint, OutputStream outputStream) throws IOException {
-        if (jtsMultiPoint.getCoordinates().length == 0) {
-            logger.error("No Coordinate data available");
-        } else {
-            GeoProtobuf.Geometry.Builder geo = GeoProtobuf.Geometry.newBuilder();
-            geo.setType(GeoProtobuf.Geometry.Type.MULTIPOINT);
-            for (Coordinate coord : jtsMultiPoint.getCoordinates()) {
-                geo.addCoordinates(createCoordinate(coord));
-            }
-            geo.build().writeTo(outputStream);
+    private GeoProtobuf.Geometry serializeMultiPoint(MultiPoint jtsMultiPoint) throws IOException {
+        GeoProtobuf.Geometry.Builder geoMultiPoint = GeoProtobuf.Geometry.newBuilder();
+        geoMultiPoint.setType(GeoProtobuf.Geometry.Type.MULTIPOINT);
+        for (int i = 0; i < jtsMultiPoint.getNumGeometries(); i++) {
+            geoMultiPoint.addGeometries(serializePoint((Point) jtsMultiPoint.getGeometryN(i)));
         }
+        return geoMultiPoint.build();
     }
 
-    public void serializeMultiLineString(MultiLineString jtsMultiLineString, OutputStream outputStream) throws IOException {
-        GeoProtobuf.Geometry.Builder geo = GeoProtobuf.Geometry.newBuilder();
-        geo.setType(GeoProtobuf.Geometry.Type.MULTILINESTRING);
+    private GeoProtobuf.Geometry serializeMultiLineString(MultiLineString jtsMultiLineString) throws IOException {
+        GeoProtobuf.Geometry.Builder geoMultiLineString = GeoProtobuf.Geometry.newBuilder();
+        geoMultiLineString.setType(GeoProtobuf.Geometry.Type.MULTILINESTRING);
         for (int i = 0; i < jtsMultiLineString.getNumGeometries(); i++) {
-            Geometry jtsGeo = jtsMultiLineString.getGeometryN(i);
-            GeoProtobuf.Geometry.Builder pbGeo = GeoProtobuf.Geometry.newBuilder();
-            for (Coordinate coord : jtsGeo.getCoordinates()) {
-                pbGeo.addCoordinates(createCoordinate(coord));
-            }
-            geo.addGeometries(pbGeo.build());
+            geoMultiLineString.addGeometries(serializeLineString((LineString) jtsMultiLineString.getGeometryN(i)));
         }
-        geo.build().writeTo(outputStream);
+        return geoMultiLineString.build();
     }
 
-    public void serializePolygon(Polygon jtsPolygon, OutputStream outputStream) throws IOException {
+    private GeoProtobuf.Geometry serializePolygon(Polygon jtsPolygon) throws IOException {
         LineString externalLS = jtsPolygon.getExteriorRing();
         int noOfInteriorRings = jtsPolygon.getNumInteriorRing();
         GeoProtobuf.Geometry.Builder geoPolygon = GeoProtobuf.Geometry.newBuilder();
@@ -124,7 +117,7 @@ public class PBSerializationHandler {
             }
             geoPolygon.addGeometries(interiorGeos.build());
         }
-        geoPolygon.build().writeTo(outputStream);
+        return geoPolygon.build();
     }
 
     private GeoProtobuf.Coordinate createCoordinate(Coordinate jtsCoordinate) {

@@ -23,14 +23,17 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.locationtech.jts.geom.*;
+import org.n52.tsf.model.jts.PBDeserializationHandler;
 import org.n52.tsf.model.jts.PBSerializationHandler;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class JTSModelPolygonTest {
@@ -63,9 +66,9 @@ public class JTSModelPolygonTest {
         GeometryFactory geometryFactory = new GeometryFactory();
         LinearRing externalLR = geometryFactory.createLinearRing(new Coordinate[]{
                 new Coordinate(0, 0), new Coordinate(10, 0), new Coordinate(0, 10), new Coordinate(10, 10), new Coordinate(0, 0)});
-        LinearRing[] internallLRs = new LinearRing[]{geometryFactory.createLinearRing(new Coordinate[]{
+        LinearRing[] internalLRs = new LinearRing[]{geometryFactory.createLinearRing(new Coordinate[]{
                 new Coordinate(2, 2), new Coordinate(2, 3), new Coordinate(3, 3), new Coordinate(3, 2), new Coordinate(2, 2)})};
-        Polygon polygon = geometryFactory.createPolygon(externalLR, internallLRs);
+        Polygon polygon = geometryFactory.createPolygon(externalLR, internalLRs);
         System.out.println("----------------- Serializing JTS Model Polygon with holes via Protobuf -------------------------");
         PBSerializationHandler pbSerializer = new PBSerializationHandler();
         FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
@@ -82,5 +85,46 @@ public class JTSModelPolygonTest {
     public void tearDown() throws Exception {
         Path filePath = Paths.get(Utils.TEST_FILE_LOCATION);
         Files.deleteIfExists(filePath);
+    }
+
+        @Test
+    public void deserializeGeoPolygonTestC() throws Exception {
+        GeometryFactory geometryFactory = new GeometryFactory();
+        Polygon polygon = geometryFactory.createPolygon(new Coordinate[]{
+                new Coordinate(0, 0), new Coordinate(10, 0), new Coordinate(0, 10),  new Coordinate(10, 10),  new Coordinate(0, 0)});
+        PBSerializationHandler pbSerializer = new PBSerializationHandler();
+        FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
+        try {
+            pbSerializer.serialize(polygon,output);
+            System.out.println("-------------- Deserializing JTS Model Polygon without holes via Protobuf -------------------------");
+            PBDeserializationHandler pbDeserializationHandler = new PBDeserializationHandler();
+            Polygon polygonDeserialized = (Polygon) pbDeserializationHandler.deserialize(new FileInputStream(Utils.TEST_FILE_LOCATION));
+            assertEquals(polygon, polygonDeserialized);
+            System.out.println("Successfully Deserialized : " + polygonDeserialized);
+        } finally {
+            output.close();
+        }
+    }
+
+    @Test
+    public void deserializeGeoPolygonTestD() throws Exception {
+        GeometryFactory geometryFactory = new GeometryFactory();
+        LinearRing externalLR = geometryFactory.createLinearRing(new Coordinate[]{
+                new Coordinate(0, 0), new Coordinate(10, 0), new Coordinate(0, 10),  new Coordinate(10, 10),  new Coordinate(0, 0)});
+        LinearRing[] internalLRs = new LinearRing[]{geometryFactory.createLinearRing(new Coordinate[]{
+                new Coordinate(2, 2), new Coordinate(2, 3), new Coordinate(3, 3),  new Coordinate(3, 2),  new Coordinate(2, 2)})};
+        Polygon polygon = geometryFactory.createPolygon(externalLR, internalLRs);
+        PBSerializationHandler pbSerializer = new PBSerializationHandler();
+        FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
+        try {
+            pbSerializer.serialize(polygon,output);
+            System.out.println("----------------- Deserializing JTS Model Polygon with holes via Protobuf -------------------------");
+            PBDeserializationHandler pbDeserializationHandler = new PBDeserializationHandler();
+            Polygon polygonSerialized = (Polygon) pbDeserializationHandler.deserialize(new FileInputStream(Utils.TEST_FILE_LOCATION));
+            assertEquals(polygon, polygonSerialized);
+            System.out.println("Successfully Deserialized : " + polygonSerialized);
+        } finally {
+            output.close();
+        }
     }
 }

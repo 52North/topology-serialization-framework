@@ -25,6 +25,8 @@ import org.n52.tsf.serialization.protobuf.gen.GeoProtobuf;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -48,6 +50,15 @@ public class PBDeserializationHandler {
             case LINESTRING :
                 jtsGeometry = deserializeLineString(pbGeometry);
                 break;
+            case POLYGON :
+                jtsGeometry = deserializePolygon(pbGeometry);
+                break;
+            case MULTIPOINT:
+                jtsGeometry = deserializeMultiPoint(pbGeometry);
+                break;
+            case MULTILINESTRING:
+                jtsGeometry = deserializeMultiLineString(pbGeometry);
+                break;
             default:
                 logger.error("Unsupported Geometric type");
         }
@@ -60,11 +71,53 @@ public class PBDeserializationHandler {
         return point;
     }
 
+    private MultiPoint deserializeMultiPoint(GeoProtobuf.Geometry pbGeometry){
+        Point[] jtsPoints = pbGeometry.getGeometriesList().
+                stream().map(this::deserializePoint).collect(Collectors.toList()).stream().toArray(Point[] :: new);
+        MultiPoint multiPoint = geometryFactory.createMultiPoint(jtsPoints);
+        return multiPoint;
+    }
+
     private LineString deserializeLineString(GeoProtobuf.Geometry pbGeometry){
         Coordinate[] jtsCoordinates = pbGeometry.getCoordinatesList().
                 stream().map(this::createJtsCoordinate).collect(Collectors.toList()).stream().toArray(Coordinate[] :: new);
         LineString lineString = geometryFactory.createLineString(jtsCoordinates);
         return lineString;
+    }
+
+    private MultiLineString deserializeMultiLineString(GeoProtobuf.Geometry pbGeometry){
+       LineString[] jtsLineStrings = pbGeometry.getGeometriesList().
+                stream().map(this::deserializeLineString).collect(Collectors.toList()).stream().toArray(LineString[] :: new);
+        MultiLineString multiLineString = geometryFactory.createMultiLineString(jtsLineStrings);
+        return multiLineString;
+    }
+
+    private Polygon deserializePolygon(GeoProtobuf.Geometry pbGeometry){
+        Polygon polygon;
+        if(pbGeometry.getGeometriesCount()==1){
+            GeoProtobuf.Geometry exteriorLS = pbGeometry.getGeometries(0);
+            Coordinate[] jtsCoordinates = exteriorLS.getCoordinatesList().
+                    stream().map(this::createJtsCoordinate).collect(Collectors.toList()).stream().toArray(Coordinate[] :: new);
+            polygon = geometryFactory.createPolygon(jtsCoordinates);
+
+        }else {
+            GeoProtobuf.Geometry exteriorLS = pbGeometry.getGeometries(0);
+            List<GeoProtobuf.Geometry> interiorLSs = pbGeometry.getGeometries(1).getGeometriesList();
+
+            Coordinate[] exCoordinates = exteriorLS.getCoordinatesList().
+                    stream().map(this::createJtsCoordinate).collect(Collectors.toList()).stream().toArray(Coordinate[] :: new);
+
+            LinearRing exteriorLR = geometryFactory.createLinearRing(exCoordinates);
+
+            List<LinearRing> jtsInteriorLRs =  new ArrayList();
+            for (GeoProtobuf.Geometry geo: interiorLSs) {
+                Coordinate[] inCoordinates = geo.getCoordinatesList().
+                        stream().map(this::createJtsCoordinate).collect(Collectors.toList()).stream().toArray(Coordinate[] :: new);
+                jtsInteriorLRs.add(geometryFactory.createLinearRing(inCoordinates));
+            }
+            polygon = geometryFactory.createPolygon(exteriorLR, jtsInteriorLRs.stream().toArray(LinearRing[] :: new));
+        }
+        return polygon;
     }
 
     private Coordinate createJtsCoordinate(GeoProtobuf.Coordinate pbCoordinate) {
