@@ -37,6 +37,8 @@ public class PBSerializationHandler {
         GeoProtobuf.Geometry pbGeometry;
         if (jtsGeometry instanceof Point) {
             pbGeometry = serializePoint((Point) jtsGeometry);
+        }else if (jtsGeometry instanceof LinearRing) {
+            pbGeometry = serializeLinearRing((LinearRing) jtsGeometry);
         } else if (jtsGeometry instanceof LineString) {
             pbGeometry = serializeLineString((LineString) jtsGeometry);
         } else if (jtsGeometry instanceof Polygon) {
@@ -48,6 +50,16 @@ public class PBSerializationHandler {
         } else {
             throw new IllegalArgumentException("Unsupported Geometric type");
         }
+        pbGeometry.writeTo(outputStream);
+    }
+
+    public void serialize(LineSegment jtsLine, OutputStream outputStream) throws IOException {
+        GeoProtobuf.Geometry pbGeometry =  serializeLine(jtsLine);
+        pbGeometry.writeTo(outputStream);
+    }
+
+    public void serialize(Triangle jtsTriangle, OutputStream outputStream) throws IOException {
+        GeoProtobuf.Geometry pbGeometry =  serializeTriangle(jtsTriangle);
         pbGeometry.writeTo(outputStream);
     }
 
@@ -118,6 +130,49 @@ public class PBSerializationHandler {
             geoPolygon.addGeometries(interiorGeos.build());
         }
         return geoPolygon.build();
+    }
+
+    private GeoProtobuf.Geometry serializeLinearRing(LineString jtsLinearRing) throws IOException {
+        if (jtsLinearRing.getCoordinates().length < 2) {
+            throw new IllegalArgumentException("Insufficient Coordinates");
+        } else {
+            GeoProtobuf.Geometry.Builder geoLinearRing = GeoProtobuf.Geometry.newBuilder();
+            geoLinearRing.setType(GeoProtobuf.Geometry.Type.LINEARRING);
+            for (Coordinate coord : jtsLinearRing.getCoordinates()) {
+                geoLinearRing.addCoordinates(createCoordinate(coord));
+            }
+            return geoLinearRing.build();
+        }
+    }
+
+    private GeoProtobuf.Geometry serializeLine(LineSegment jtsLineSegment) throws IOException {
+        Coordinate p0 = jtsLineSegment.getCoordinate(0);
+        Coordinate p1 = jtsLineSegment.getCoordinate(1);
+        if (p0 == null || p1 == null) {
+            throw new IllegalArgumentException("Insufficient Coordinates");
+        } else {
+            GeoProtobuf.Geometry.Builder geoLine = GeoProtobuf.Geometry.newBuilder();
+            geoLine.setType(GeoProtobuf.Geometry.Type.LINE);
+            geoLine.addCoordinates(createCoordinate(p0));
+            geoLine.addCoordinates(createCoordinate(p1));
+            return geoLine.build();
+        }
+    }
+
+    private GeoProtobuf.Geometry serializeTriangle(Triangle jtsTriangle) throws IOException {
+        Coordinate p0 = jtsTriangle.p0;
+        Coordinate p1 = jtsTriangle.p1;
+        Coordinate p2 = jtsTriangle.p2;
+        if (p0 == null || p1 == null || p2 == null) {
+            throw new IllegalArgumentException("Insufficient Coordinates");
+        } else {
+            GeoProtobuf.Geometry.Builder geoTriangle = GeoProtobuf.Geometry.newBuilder();
+            geoTriangle.setType(GeoProtobuf.Geometry.Type.TRIANGLE);
+            geoTriangle.addCoordinates(createCoordinate(p0));
+            geoTriangle.addCoordinates(createCoordinate(p1));
+            geoTriangle.addCoordinates(createCoordinate(p2));
+            return geoTriangle.build();
+        }
     }
 
     private GeoProtobuf.Coordinate createCoordinate(Coordinate jtsCoordinate) {

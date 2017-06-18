@@ -59,6 +59,9 @@ public class PBDeserializationHandler {
             case MULTILINESTRING:
                 jtsGeometry = deserializeMultiLineString(pbGeometry);
                 break;
+            case LINEARRING:
+                jtsGeometry = deserializeLinearRing(pbGeometry);
+                break;
             default:
                 logger.error("Unsupported Geometric type");
         }
@@ -83,6 +86,29 @@ public class PBDeserializationHandler {
                 stream().map(this::createJtsCoordinate).collect(Collectors.toList()).stream().toArray(Coordinate[] :: new);
         LineString lineString = geometryFactory.createLineString(jtsCoordinates);
         return lineString;
+    }
+
+    public LineSegment deserializeLine(InputStream inputStream) throws IOException {
+        GeoProtobuf.Geometry pbGeometry = GeoProtobuf.Geometry.parseFrom(inputStream);
+        Coordinate[] jtsCoordinates = pbGeometry.getCoordinatesList().
+                stream().map(this::createJtsCoordinate).collect(Collectors.toList()).stream().toArray(Coordinate[]::new);
+        LineSegment lineSegment = new LineSegment(jtsCoordinates[0], jtsCoordinates[1]);
+        return lineSegment;
+    }
+
+    public Triangle deserializeTriangle(InputStream inputStream) throws IOException {
+        GeoProtobuf.Geometry pbGeometry = GeoProtobuf.Geometry.parseFrom(inputStream);
+        Coordinate[] jtsCoordinates = pbGeometry.getCoordinatesList().
+                stream().map(this::createJtsCoordinate).collect(Collectors.toList()).stream().toArray(Coordinate[]::new);
+        Triangle triangle = new Triangle(jtsCoordinates[0], jtsCoordinates[1], jtsCoordinates[2]);
+        return triangle;
+    }
+
+    private LinearRing deserializeLinearRing(GeoProtobuf.Geometry pbGeometry) {
+        Coordinate[] jtsCoordinates = pbGeometry.getCoordinatesList().
+                stream().map(this::createJtsCoordinate).collect(Collectors.toList()).stream().toArray(Coordinate[]::new);
+        LinearRing linearRing = geometryFactory.createLinearRing(jtsCoordinates);
+        return linearRing;
     }
 
     private MultiLineString deserializeMultiLineString(GeoProtobuf.Geometry pbGeometry){
