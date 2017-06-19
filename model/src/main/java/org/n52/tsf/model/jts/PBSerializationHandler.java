@@ -47,6 +47,8 @@ public class PBSerializationHandler {
             pbGeometry = serializeMultiPoint((MultiPoint) jtsGeometry);
         } else if (jtsGeometry instanceof MultiLineString) {
             pbGeometry = serializeMultiLineString((MultiLineString) jtsGeometry);
+        }else if (jtsGeometry instanceof MultiPolygon) {
+            pbGeometry = serializeMultiPolygon((MultiPolygon) jtsGeometry);
         } else {
             throw new IllegalArgumentException("Unsupported Geometric type");
         }
@@ -157,6 +159,15 @@ public class PBSerializationHandler {
             geoLine.addCoordinates(createCoordinate(p1));
             return geoLine.build();
         }
+    }
+
+    public GeoProtobuf.Geometry serializeMultiPolygon(MultiPolygon jtsMultiPolygon) throws IOException {
+        GeoProtobuf.Geometry.Builder geoMultiPolygon = GeoProtobuf.Geometry.newBuilder();
+        geoMultiPolygon.setType(GeoProtobuf.Geometry.Type.MULTIPOLYGON);
+        for (int i = 0; i < jtsMultiPolygon.getNumGeometries(); i++) {
+            geoMultiPolygon.addGeometries(serializePolygon((Polygon) jtsMultiPolygon.getGeometryN(i)));
+        }
+        return geoMultiPolygon.build();
     }
 
     private GeoProtobuf.Geometry serializeTriangle(Triangle jtsTriangle) throws IOException {
