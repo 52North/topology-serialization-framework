@@ -25,6 +25,7 @@ import org.junit.Test;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
+import org.n52.tsf.model.jts.AvroSerializationHandler;
 import org.n52.tsf.model.jts.PBDeserializationHandler;
 import org.n52.tsf.model.jts.PBSerializationHandler;
 
@@ -56,6 +57,23 @@ public class JTSModelPointTest {
         FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
         try {
             pbSerializer.serialize(point,output);
+        } finally {
+            output.close();
+        }
+        assertTrue(new File(Utils.TEST_FILE_LOCATION).length() > 0);
+        System.out.println("Successfully Serialized....");
+    }
+
+    @Test
+    public void testSerializeGeoPointWithAvro() throws Exception {
+        GeometryFactory geometryFactory = new GeometryFactory();
+        Coordinate coordinate = new Coordinate(1,2);
+        Point point = geometryFactory.createPoint(coordinate);
+        System.out.println("-------------- Serializing JTS Model Point via Avro -------------------------");
+        AvroSerializationHandler avroSerializer = new AvroSerializationHandler();
+        FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
+        try {
+            avroSerializer.serialize(point,output);
         } finally {
             output.close();
         }

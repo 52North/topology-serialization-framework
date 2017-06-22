@@ -108,6 +108,7 @@
             <groupId>org.apache.avro</groupId>
             <artifactId>avro</artifactId>
             <version>${avro.java.version}</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
     
