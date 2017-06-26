@@ -23,9 +23,8 @@ import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.log4j.Logger;
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.geom.*;
+import org.n52.tsf.serialization.avro.gen.Type;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -44,6 +43,10 @@ public class AvroSerializationHandler {
         org.n52.tsf.serialization.avro.gen.Geometry avroGeometry;
         if (jtsGeometry instanceof Point) {
             avroGeometry = serializePoint((Point) jtsGeometry);
+        }else if (jtsGeometry instanceof LineString) {
+            avroGeometry = serializeLineString((LineString) jtsGeometry);
+    } else if (jtsGeometry instanceof Polygon) {
+            avroGeometry = serializePolygon((Polygon) jtsGeometry);
         } else {
             throw new IllegalArgumentException("Unsupported Geometric type");
         }
@@ -71,11 +74,68 @@ public class AvroSerializationHandler {
         }
     }
 
+    private org.n52.tsf.serialization.avro.gen.Geometry serializeLineString(LineString jtsLineString) {
+        if (jtsLineString.getCoordinates().length < 2) {
+            throw new IllegalArgumentException("Insufficient Coordinates");
+        } else {
+            List<org.n52.tsf.serialization.avro.gen.Coordinate> coordinateList = new ArrayList<>();
+            for (Coordinate coord : jtsLineString.getCoordinates()) {
+                coordinateList.add(createCoordinate(coord));
+            }
+            return createGeometry(coordinateList, null, org.n52.tsf.serialization.avro.gen.Type.LINESTRING);
+        }
+    }
+
+    private org.n52.tsf.serialization.avro.gen.Geometry serializePolygon(Polygon jtsPolygon) {
+        LineString externalLS = jtsPolygon.getExteriorRing();
+        int noOfInteriorRings = jtsPolygon.getNumInteriorRing();
+
+        List<org.n52.tsf.serialization.avro.gen.Coordinate> exCoordinateList = new ArrayList<>();
+        for (Coordinate coord : externalLS.getCoordinates()) {
+            exCoordinateList.add(createCoordinate(coord));
+        }
+        List<org.n52.tsf.serialization.avro.gen.Geometry> interiorGeos = new ArrayList<>();
+        if (noOfInteriorRings > 0) {
+            for (int i = 0; i < noOfInteriorRings; i++) {
+                LineString interiorLS = jtsPolygon.getInteriorRingN(i);
+                List<org.n52.tsf.serialization.avro.gen.Coordinate> inCoordinateList = new ArrayList<>();
+                for (Coordinate coord : interiorLS.getCoordinates()) {
+                    inCoordinateList.add(createCoordinate(coord));
+                }
+                interiorGeos.add(createGeometry(inCoordinateList, null, Type.LINEARRING));
+            }
+        }
+
+        return createGeometry(exCoordinateList, interiorGeos, Type.POLYGON);
+    }
+
     private org.n52.tsf.serialization.avro.gen.Coordinate createCoordinate(Coordinate jtsCoordinate) {
         org.n52.tsf.serialization.avro.gen.Coordinate.Builder coordinate = org.n52.tsf.serialization.avro.gen.Coordinate.newBuilder();
         coordinate.setX(jtsCoordinate.x);
         coordinate.setY(jtsCoordinate.y);
         coordinate.setZ(NaN);
         return coordinate.build();
+    }
+
+    private org.n52.tsf.serialization.avro.gen.Geometry createGeometry(List<org.n52.tsf.serialization.avro.gen.Coordinate> coordinates,
+                                                                       List<org.n52.tsf.serialization.avro.gen.Geometry> geometries,
+                                                                       org.n52.tsf.serialization.avro.gen.Type type) {
+        org.n52.tsf.serialization.avro.gen.Geometry.Builder geometry = org.n52.tsf.serialization.avro.gen.
+                Geometry.newBuilder();
+        if (coordinates == null) {
+            List<org.n52.tsf.serialization.avro.gen.Coordinate> coordinateList = new ArrayList<>();
+            geometry.setCoordinates(coordinateList);
+        } else {
+            geometry.setCoordinates(coordinates);
+        }
+        if (geometries == null) {
+            List<org.n52.tsf.serialization.avro.gen.Geometry> geometryList = new ArrayList<>();
+            geometry.setGeometries(geometryList);
+        } else {
+            geometry.setGeometries(geometries);
+        }
+
+        geometry.setType(type);
+        return geometry.build();
     }
 }

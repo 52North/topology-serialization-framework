@@ -25,6 +25,7 @@ import org.junit.Test;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LineString;
+import org.n52.tsf.model.jts.AvroSerializationHandler;
 import org.n52.tsf.model.jts.PBDeserializationHandler;
 import org.n52.tsf.model.jts.PBSerializationHandler;
 
@@ -56,6 +57,23 @@ public class JTSModelLineStringTest {
         FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
         try {
             pbSerializer.serialize(lineString,output);
+        } finally {
+            output.close();
+        }
+        assertTrue(new File(Utils.TEST_FILE_LOCATION).length() > 0);
+        System.out.println("Successfully Serialized....");
+    }
+
+    @Test
+    public void testSerializeGeoLineStringWithAvro() throws Exception {
+        GeometryFactory geometryFactory = new GeometryFactory();
+        LineString lineString = geometryFactory.createLineString(new Coordinate[]{
+                new Coordinate(0, 0), new Coordinate(1, 0), new Coordinate(1, 1)});
+        System.out.println("-------------- Serializing JTS Model LineString via Avro -------------------------");
+        AvroSerializationHandler avroSerializer = new AvroSerializationHandler();
+        FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
+        try {
+            avroSerializer.serialize(lineString,output);
         } finally {
             output.close();
         }
