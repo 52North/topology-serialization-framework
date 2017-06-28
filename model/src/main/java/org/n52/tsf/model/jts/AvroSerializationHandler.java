@@ -43,9 +43,9 @@ public class AvroSerializationHandler {
         org.n52.tsf.serialization.avro.gen.Geometry avroGeometry;
         if (jtsGeometry instanceof Point) {
             avroGeometry = serializePoint((Point) jtsGeometry);
-        }else if (jtsGeometry instanceof LineString) {
+        } else if (jtsGeometry instanceof LineString) {
             avroGeometry = serializeLineString((LineString) jtsGeometry);
-    } else if (jtsGeometry instanceof Polygon) {
+        } else if (jtsGeometry instanceof Polygon) {
             avroGeometry = serializePolygon((Polygon) jtsGeometry);
         } else {
             throw new IllegalArgumentException("Unsupported Geometric type");
