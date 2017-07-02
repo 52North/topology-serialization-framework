@@ -33,6 +33,11 @@
             <version>${avro.java.version}</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>org.gdal</groupId>
+            <artifactId>gdal</artifactId>
+            <version>2.2.0</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
