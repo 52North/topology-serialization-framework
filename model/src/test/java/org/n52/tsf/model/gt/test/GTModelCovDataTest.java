@@ -56,11 +56,29 @@ public class GTModelCovDataTest {
         File tfwFile = new File(classLoader.getResource("geotif/no_crs_no_envelope2.tfw").getFile());
         File tifFile = new File(classLoader.getResource("geotif/no_crs_no_envelope2.tif").getFile());
 
-        System.out.println("-------------- Serializing JTS Model Point via Protobuf -------------------------");
+        System.out.println("-------------- Serializing Geotif coverage Model via Protobuf -------------------------");
         PBCovDataSerializationHadler pbCovDataSerializationHadler = new PBCovDataSerializationHadler();
         FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
         try {
             pbCovDataSerializationHadler.serialize(tifFile, tfwFile, output);
+        } finally {
+            output.close();
+        }
+        assertTrue(new File(Utils.TEST_FILE_LOCATION).length() > 0);
+        System.out.println("Successfully Serialized....");
+    }
+
+    @Test
+    public void testSerializeGeoTifDataWithCRS() throws Exception {
+        ClassLoader classLoader = GTModelCovDataTest.class.getClassLoader();
+        //source no_crs_no_envelope2.tfw - https://github.com/geotools/geotools/tree/master/modules/plugin/geotiff/src/test/resources/org/geotools/gce/geotiff/test-data
+        File tifFile = new File(classLoader.getResource("geotif/geo.tiff").getFile());
+
+        System.out.println("-------------- Serializing Serializing Geotif coverage Model with CRS via Protobuf -------------------------");
+        PBCovDataSerializationHadler pbCovDataSerializationHadler = new PBCovDataSerializationHadler();
+        FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
+        try {
+            pbCovDataSerializationHadler.serialize(tifFile, output);
         } finally {
             output.close();
         }
