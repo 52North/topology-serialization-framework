@@ -5,6 +5,7 @@ import org.geotools.coverage.grid.GridCoverage2D;
 import org.geotools.coverage.grid.GridGeometry2D;
 import org.geotools.coverage.grid.io.imageio.geotiff.GeoTiffIIOMetadataDecoder;
 import org.geotools.gce.geotiff.GeoTiffReader;
+import org.geotools.referencing.CRS;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
 
@@ -33,7 +34,8 @@ public class GeoToolsMetaData {
         System.out.println(BaselineTIFFTagSet.TAG_X_RESOLUTION);
         System.out.println(BaselineTIFFTagSet.TAG_COLOR_MAP);
 
-//        System.out.println(CRS.lookupIdentifier(coverage.getCoordinateReferenceSystem(), true));
+        System.out.println(CRS.lookupIdentifier(coverage.getCoordinateReferenceSystem(), true));
+        System.out.println(CRS.lookupEpsgCode(coverage.getCoordinateReferenceSystem(),true));
 //
 //        System.out.println(metadata.getModelTiePoints()[0]);
 //        System.out.println(metadata.getModelPixelScales());
