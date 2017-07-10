@@ -19,16 +19,12 @@
 
 package org.n52.tsf.model.gt.test;
 
+import org.geotools.coverage.grid.GridCoverage2D;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.GeometryFactory;
-import org.locationtech.jts.geom.Point;
-import org.n52.tsf.model.gt.PBCovDataSerializationHadler;
-import org.n52.tsf.model.jts.AvroSerializationHandler;
-import org.n52.tsf.model.jts.PBDeserializationHandler;
-import org.n52.tsf.model.jts.PBSerializationHandler;
+import org.n52.tsf.model.gt.PBCovDataDeserializationHandler;
+import org.n52.tsf.model.gt.PBCovDataSerializationHandler;
 import org.n52.tsf.model.jts.test.Utils;
 
 import java.io.File;
@@ -57,10 +53,32 @@ public class GTModelCovDataTest {
         File tifFile = new File(classLoader.getResource("geotif/no_crs_no_envelope2.tif").getFile());
 
         System.out.println("-------------- Serializing Geotif coverage Model via Protobuf -------------------------");
-        PBCovDataSerializationHadler pbCovDataSerializationHadler = new PBCovDataSerializationHadler();
+        PBCovDataSerializationHandler pbCovDataSerializationHandler = new PBCovDataSerializationHandler();
         FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
         try {
-            pbCovDataSerializationHadler.serialize(tifFile, tfwFile, output);
+            pbCovDataSerializationHandler.serialize(tifFile, tfwFile, output);
+        } finally {
+            output.close();
+        }
+        assertTrue(new File(Utils.TEST_FILE_LOCATION).length() > 0);
+        System.out.println("Successfully Serialized....");
+    }
+
+    @Test
+    public void testDeserializeGeoTifData() throws Exception {
+        ClassLoader classLoader = GTModelCovDataTest.class.getClassLoader();
+        //source no_crs_no_envelope2.tfw - https://github.com/geotools/geotools/tree/master/modules/plugin/geotiff/src/test/resources/org/geotools/gce/geotiff/test-data
+        File tfwFile = new File(classLoader.getResource("geotif/no_crs_no_envelope2.tfw").getFile());
+        File tifFile = new File(classLoader.getResource("geotif/no_crs_no_envelope2.tif").getFile());
+        System.out.println("-------------- Deserializing Geotif coverage Model via Protobuf -------------------------");
+        PBCovDataSerializationHandler pbCovDataSerializationHandler = new PBCovDataSerializationHandler();
+        FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
+
+        try {
+            pbCovDataSerializationHandler.serialize(tifFile, tfwFile, output);
+            PBCovDataDeserializationHandler pbCovDatadeSerializationHandler = new PBCovDataDeserializationHandler();
+            GridCoverage2D gridCoverage = pbCovDatadeSerializationHandler.deserialize("testgeotif",new FileInputStream(Utils.TEST_FILE_LOCATION));
+            //TODO Add the assert
         } finally {
             output.close();
         }
@@ -71,11 +89,11 @@ public class GTModelCovDataTest {
     @Test
     public void testSerializeGeoTifDataWithCRS() throws Exception {
         ClassLoader classLoader = GTModelCovDataTest.class.getClassLoader();
-        //source no_crs_no_envelope2.tfw - https://github.com/geotools/geotools/tree/master/modules/plugin/geotiff/src/test/resources/org/geotools/gce/geotiff/test-data
+        //source geo.tiff - https://github.com/geotools/geotools/tree/master/modules/plugin/geotiff/src/test/resources/org/geotools/gce/geotiff/test-data
         File tifFile = new File(classLoader.getResource("geotif/geo.tiff").getFile());
 
-        System.out.println("-------------- Serializing Serializing Geotif coverage Model with CRS via Protobuf -------------------------");
-        PBCovDataSerializationHadler pbCovDataSerializationHadler = new PBCovDataSerializationHadler();
+        System.out.println("-------------- Serializing Geotif coverage Model with CRS via Protobuf -------------------------");
+        PBCovDataSerializationHandler pbCovDataSerializationHadler = new PBCovDataSerializationHandler();
         FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
         try {
             pbCovDataSerializationHadler.serialize(tifFile, output);
