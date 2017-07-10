@@ -32,6 +32,7 @@ message Grid {
     int32 max_width = 7;
     int32 max_hight = 8;
     string source_crs = 9;
+    int32 color_space = 10;
 }
 
 message GridWithCRS {
