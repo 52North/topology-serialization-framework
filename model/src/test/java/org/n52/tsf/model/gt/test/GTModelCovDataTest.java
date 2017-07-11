@@ -20,12 +20,17 @@
 package org.n52.tsf.model.gt.test;
 
 import org.geotools.coverage.grid.GridCoverage2D;
+import org.geotools.coverage.grid.io.AbstractGridFormat;
+import org.geotools.coverage.grid.io.GridCoverage2DReader;
+import org.geotools.coverage.grid.io.GridFormatFinder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.n52.tsf.model.gt.PBCovDataDeserializationHandler;
 import org.n52.tsf.model.gt.PBCovDataSerializationHandler;
 import org.n52.tsf.model.jts.test.Utils;
+import org.opengis.coverage.grid.GridCoordinates;
+import org.opengis.coverage.grid.GridEnvelope;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -42,7 +47,9 @@ public class GTModelCovDataTest {
     @Before
     public void setUp() throws Exception {
         Path filePath = Paths.get(Utils.TEST_FILE_LOCATION);
-        Files.createFile(filePath);
+        if(Files.notExists(filePath)) {
+            Files.createFile(filePath);
+        }
     }
 
     @Test
@@ -78,12 +85,14 @@ public class GTModelCovDataTest {
             pbCovDataSerializationHandler.serialize(tifFile, tfwFile, output);
             PBCovDataDeserializationHandler pbCovDatadeSerializationHandler = new PBCovDataDeserializationHandler();
             GridCoverage2D gridCoverage = pbCovDatadeSerializationHandler.deserialize("testgeotif",new FileInputStream(Utils.TEST_FILE_LOCATION));
-            //TODO Add the assert
+            GridEnvelope dimensions = gridCoverage.getGridGeometry().getGridRange();
+            GridCoordinates maxDimensions = dimensions.getHigh();
+            assertEquals(maxDimensions.getCoordinateValue(0), 11);
+            assertEquals(maxDimensions.getCoordinateValue(1), 11);
         } finally {
             output.close();
         }
-        assertTrue(new File(Utils.TEST_FILE_LOCATION).length() > 0);
-        System.out.println("Successfully Serialized....");
+        System.out.println("Successfully Deserialized....");
     }
 
     @Test

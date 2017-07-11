@@ -39,7 +39,7 @@ public class PBCovDataDeserializationHandler {
         GridCoverageFactory factory = new GridCoverageFactory();
         BufferedImage image = new BufferedImage(pbGrid.getMaxWidth(), pbGrid.getMaxHight(), pbGrid.getColorSpace());
         CoordinateReferenceSystem crs= CRS.decode(pbGrid.getSourceCrs());
-        ReferencedEnvelope envelope = new ReferencedEnvelope(crs);
+        ReferencedEnvelope envelope = new ReferencedEnvelope(0, pbGrid.getMaxWidth(), 0, pbGrid.getMaxHight(), crs);
         return factory.create(covName, image, envelope);
     }
 }
