@@ -23,6 +23,7 @@ import org.geotools.coverage.grid.GridCoverage2D;
 import org.geotools.coverage.grid.io.AbstractGridFormat;
 import org.geotools.coverage.grid.io.GridCoverage2DReader;
 import org.geotools.coverage.grid.io.GridFormatFinder;
+import org.geotools.referencing.CRS;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -89,6 +90,7 @@ public class GTModelCovDataTest {
             GridCoordinates maxDimensions = dimensions.getHigh();
             assertEquals(maxDimensions.getCoordinateValue(0), 11);
             assertEquals(maxDimensions.getCoordinateValue(1), 11);
+            assertEquals("EPSG:404000", CRS.lookupIdentifier(gridCoverage.getCoordinateReferenceSystem(), true));
         } finally {
             output.close();
         }
