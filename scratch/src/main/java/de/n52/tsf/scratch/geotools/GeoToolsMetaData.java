@@ -18,6 +18,7 @@ public class GeoToolsMetaData {
         ClassLoader classLoader = GeoToolsTest.class.getClassLoader();
 
         //source no_crs_no_envelope2.tif - https://github.com/geotools/geotools/tree/master/modules/plugin/geotiff/src/test/resources/org/geotools/gce/geotiff/test-data
+        //File file = new File(classLoader.getResource("geotif/no_crs_no_envelope2.tif").getFile());
         File file = new File(classLoader.getResource("geotif/geo.tiff").getFile());
         extractMetaData(file);
     }
@@ -28,17 +29,13 @@ public class GeoToolsMetaData {
 
         GridCoverage2D coverage = reader.read(null);
         GridGeometry2D geometry = coverage.getGridGeometry();
-        String readSoftware = metadata.getAsciiTIFFTag(Integer.toString(BaselineTIFFTagSet.TAG_SOFTWARE));
-        String readCopyright = metadata.getAsciiTIFFTag(Integer.toString(BaselineTIFFTagSet.TAG_COPYRIGHT));
-        System.out.println(BaselineTIFFTagSet.TAG_X_POSITION);
-        System.out.println(BaselineTIFFTagSet.TAG_X_RESOLUTION);
-        System.out.println(BaselineTIFFTagSet.TAG_COLOR_MAP);
+        System.out.println(metadata.getAsciiTIFFTag(Integer.toString(BaselineTIFFTagSet.TAG_SOFTWARE)));
+        System.out.println(metadata.getAsciiTIFFTag(Integer.toString(BaselineTIFFTagSet.TAG_COPYRIGHT)));
+        System.out.println(metadata.getAsciiTIFFTag(Integer.toString(BaselineTIFFTagSet.RESOLUTION_UNIT_CENTIMETER)));
+        //System.out.println(metadata.getAsciiTIFFTag(Integer.toString(BaselineTIFFTagSet.TAG_X_RESOLUTION)));
+        System.out.println(metadata.getAsciiTIFFTag(Integer.toString(BaselineTIFFTagSet.TAG_COLOR_MAP)));
 
         System.out.println(CRS.lookupIdentifier(coverage.getCoordinateReferenceSystem(), true));
-        System.out.println(CRS.lookupEpsgCode(coverage.getCoordinateReferenceSystem(),true));
-//
-//        System.out.println(metadata.getModelTiePoints()[0]);
-//        System.out.println(metadata.getModelPixelScales());
 
     }
 }
