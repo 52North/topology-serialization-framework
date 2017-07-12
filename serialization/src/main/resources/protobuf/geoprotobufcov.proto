@@ -33,9 +33,21 @@ message Grid {
     int32 max_hight = 8;
     string source_crs = 9;
     int32 color_space = 10;
+    repeated TiePoint tie_points = 11;
+    PixelScale pixel_scale = 12;
 }
 
-message GridWithCRS {
+message TiePoint {
+    repeated double value = 1;
+ }
+
+message PixelScale {
+    double scale_x = 1;
+    double scale_y = 2;
+    double scale_z = 3;
+}
+
+ message GridWithCRS {
     repeated GridPoint gridPoints = 1;
 }
 

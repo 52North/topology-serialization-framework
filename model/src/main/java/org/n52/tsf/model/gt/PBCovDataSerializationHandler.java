@@ -25,7 +25,10 @@ import org.geotools.coverage.grid.GridGeometry2D;
 import org.geotools.coverage.grid.io.AbstractGridFormat;
 import org.geotools.coverage.grid.io.GridCoverage2DReader;
 import org.geotools.coverage.grid.io.GridFormatFinder;
+import org.geotools.coverage.grid.io.imageio.geotiff.GeoTiffIIOMetadataDecoder;
+import org.geotools.coverage.grid.io.imageio.geotiff.TiePoint;
 import org.geotools.data.WorldFileReader;
+import org.geotools.gce.geotiff.GeoTiffReader;
 import org.geotools.referencing.CRS;
 import org.n52.tsf.serialization.protobuf.gen.GeoProtobufCov;
 import org.opengis.coverage.grid.GridCoordinates;
@@ -88,6 +91,8 @@ public class PBCovDataSerializationHandler {
     }
 
     public void setCoverageGridData(GeoProtobufCov.Grid.Builder gridBuilder, File geotifFile) throws IOException, FactoryException {
+        GeoTiffReader fileReader = new GeoTiffReader(geotifFile);
+        GeoTiffIIOMetadataDecoder metadata = fileReader.getMetadata();
         AbstractGridFormat format = GridFormatFinder.findFormat(geotifFile);
         GridCoverage2DReader reader = format.getReader(geotifFile);
         GridEnvelope dimensions = reader.getOriginalGridRange();
@@ -97,5 +102,23 @@ public class PBCovDataSerializationHandler {
         gridBuilder.setMaxHight(maxDimensions.getCoordinateValue(1) + 1);
         gridBuilder.setSourceCrs(CRS.lookupIdentifier(coverage.getCoordinateReferenceSystem(), true));
         gridBuilder.setColorSpace(coverage.getRenderedImage().getColorModel().getColorSpace().getType());
+
+        if(metadata.hasTiePoints()) {
+            for (TiePoint tp : metadata.getModelTiePoints()) {
+                GeoProtobufCov.TiePoint.Builder tiePoint = GeoProtobufCov.TiePoint.newBuilder();
+                for (double value : tp.getData()) {
+                    tiePoint.addValue(value);
+                }
+                gridBuilder.addTiePoints(tiePoint.build());
+            }
+        }
+
+        if(metadata.hasPixelScales()) {
+            GeoProtobufCov.PixelScale.Builder pixelScale = GeoProtobufCov.PixelScale.newBuilder();
+            pixelScale.setScaleX(metadata.getModelPixelScales().getScaleX());
+            pixelScale.setScaleY(metadata.getModelPixelScales().getScaleY());
+            pixelScale.setScaleZ(metadata.getModelPixelScales().getScaleZ());
+            gridBuilder.setPixelScale(pixelScale.build());
+        }
     }
 }
