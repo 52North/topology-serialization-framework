@@ -1,10 +1,23 @@
 package de.n52.tsf.scratch.geotools;
 
+import org.geotools.coverage.grid.GridCoverage2D;
+import org.geotools.coverage.grid.GridCoverageFactory;
+import org.geotools.coverage.grid.GridEnvelope2D;
+import org.geotools.coverage.grid.GridGeometry2D;
 import org.geotools.data.WorldFileReader;
+import org.geotools.geometry.Envelope2D;
+import org.geotools.geometry.GeneralEnvelope;
+import org.geotools.geometry.jts.ReferencedEnvelope;
+import org.geotools.referencing.CRS;
 import org.geotools.referencing.operation.matrix.GeneralMatrix;
 import org.geotools.referencing.operation.transform.ProjectiveTransform;
+import org.opengis.coverage.grid.GridCoordinates;
+import org.opengis.coverage.grid.GridEnvelope;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.datum.PixelInCell;
 import org.opengis.referencing.operation.MathTransform;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
@@ -25,6 +38,29 @@ public class WordFileReaderSample {
 
         MathTransform mt = createMathtransform(worldFileReader);
         System.out.println(mt.toWKT());
+    }
+
+    public void tfwtocovmodel(File tfwFile) throws IOException {
+        int w = 12;
+        int h = 12;
+        GridCoverageFactory factory = new GridCoverageFactory();
+        BufferedImage image = new BufferedImage(w, h, 1);
+        ReferencedEnvelope envelope = new ReferencedEnvelope(0, w, 0, h, null);
+
+        GridCoverage2D geometry = factory.create("test", image, envelope);
+        WorldFileReader reader = new WorldFileReader(tfwFile);
+        MathTransform raster2Model = createMathtransform(reader);
+
+        for (int i = 0; i < w; i++) {
+            for (int j = 0; j < h; j++) {
+                GeneralEnvelope ge = new GeneralEnvelope(new GridEnvelope2D(i, j, 1, 1), PixelInCell.CELL_CENTER, raster2Model, null);
+                Envelope2D pixelEnvelop = new Envelope2D(ge);
+                double latitude = pixelEnvelop.getCenterX();
+                double longitude = pixelEnvelop.getCenterY();
+                System.out.println(latitude + ":" + longitude);
+
+            }
+        }
     }
 
     public static MathTransform createMathtransform(WorldFileReader worldFileReader){
