@@ -34,6 +34,7 @@ import org.n52.tsf.serialization.protobuf.gen.GeoProtobufCov;
 import org.opengis.coverage.grid.GridCoordinates;
 import org.opengis.coverage.grid.GridEnvelope;
 import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.operation.TransformException;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,31 +45,12 @@ import java.io.OutputStream;
  */
 public class PBCovDataSerializationHandler {
 
-    public void serialize(File geotifFile, OutputStream outputStream) throws Exception {
-        GeoProtobufCov.GridWithCRS.Builder gridBuilder = GeoProtobufCov.GridWithCRS.newBuilder();
-        AbstractGridFormat format = GridFormatFinder.findFormat(geotifFile);
-        GridCoverage2DReader reader = format.getReader(geotifFile);
-        GridEnvelope dimensions = reader.getOriginalGridRange();
-        GridCoordinates maxDimensions = dimensions.getHigh();
-        int w = maxDimensions.getCoordinateValue(0) + 1;
-        int h = maxDimensions.getCoordinateValue(1) + 1;
-        GridCoverage2D coverage = reader.read(null);
-        GridGeometry2D geometry = coverage.getGridGeometry();
-
-        for (int i = 0; i < w; i++) {
-            for (int j = 0; j < h; j++) {
-
-                org.geotools.geometry.Envelope2D pixelEnvelop =
-                        geometry.gridToWorld(new GridEnvelope2D(i, j, 1, 1));
-
-                double latitude = pixelEnvelop.getCenterX();
-                double longitude = pixelEnvelop.getCenterY();
-
-                GeoProtobufCov.GridPoint.Builder gridPoint = GeoProtobufCov.GridPoint.newBuilder();
-                gridPoint.setLatitude(latitude);
-                gridPoint.setLongitude(longitude);
-                gridBuilder.addGridPoints(gridPoint.build());
-            }
+    public void serialize(File geotifFile, OutputStream outputStream, boolean serializeMetaData) throws Exception {
+        GeoProtobufCov.Grid.Builder gridBuilder =GeoProtobufCov.Grid.newBuilder();
+        if(serializeMetaData){
+             setCoverageGridData(gridBuilder, geotifFile);
+        }else {
+             transformGridToWorld(gridBuilder, geotifFile);
         }
         gridBuilder.build().writeTo(outputStream);
     }
@@ -119,6 +101,33 @@ public class PBCovDataSerializationHandler {
             pixelScale.setScaleY(metadata.getModelPixelScales().getScaleY());
             pixelScale.setScaleZ(metadata.getModelPixelScales().getScaleZ());
             gridBuilder.setPixelScale(pixelScale.build());
+        }
+    }
+
+    private void transformGridToWorld(GeoProtobufCov.Grid.Builder gridBuilder, File geotifFile) throws IOException, TransformException {
+        AbstractGridFormat format = GridFormatFinder.findFormat(geotifFile);
+        GridCoverage2DReader reader = format.getReader(geotifFile);
+        GridEnvelope dimensions = reader.getOriginalGridRange();
+        GridCoordinates maxDimensions = dimensions.getHigh();
+        int w = maxDimensions.getCoordinateValue(0) + 1;
+        int h = maxDimensions.getCoordinateValue(1) + 1;
+        GridCoverage2D coverage = reader.read(null);
+        GridGeometry2D geometry = coverage.getGridGeometry();
+
+        for (int i = 0; i < w; i++) {
+            for (int j = 0; j < h; j++) {
+
+                org.geotools.geometry.Envelope2D pixelEnvelop =
+                        geometry.gridToWorld(new GridEnvelope2D(i, j, 1, 1));
+
+                double latitude = pixelEnvelop.getCenterX();
+                double longitude = pixelEnvelop.getCenterY();
+
+                GeoProtobufCov.GridPoint.Builder gridPoint = GeoProtobufCov.GridPoint.newBuilder();
+                gridPoint.setLatitude(latitude);
+                gridPoint.setLongitude(longitude);
+                gridBuilder.addGridPoints(gridPoint.build());
+            }
         }
     }
 }

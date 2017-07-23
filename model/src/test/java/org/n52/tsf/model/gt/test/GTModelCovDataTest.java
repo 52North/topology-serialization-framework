@@ -20,6 +20,8 @@
 package org.n52.tsf.model.gt.test;
 
 import org.geotools.coverage.grid.GridCoverage2D;
+import org.geotools.coverage.grid.GridEnvelope2D;
+import org.geotools.coverage.grid.GridGeometry2D;
 import org.geotools.coverage.grid.io.AbstractGridFormat;
 import org.geotools.coverage.grid.io.GridCoverage2DReader;
 import org.geotools.coverage.grid.io.GridFormatFinder;
@@ -54,7 +56,7 @@ public class GTModelCovDataTest {
     }
 
     @Test
-    public void testSerializeGeoTifData() throws Exception {
+    public void testSerializeGeoTif() throws Exception {
         ClassLoader classLoader = GTModelCovDataTest.class.getClassLoader();
         //source no_crs_no_envelope2.tfw - https://github.com/geotools/geotools/tree/master/modules/plugin/geotiff/src/test/resources/org/geotools/gce/geotiff/test-data
         File tfwFile = new File(classLoader.getResource("geotif/no_crs_no_envelope2.tfw").getFile());
@@ -73,7 +75,7 @@ public class GTModelCovDataTest {
     }
 
     @Test
-    public void testDeserializeGeoTifData() throws Exception {
+    public void testDeserializeGeoTif() throws Exception {
         ClassLoader classLoader = GTModelCovDataTest.class.getClassLoader();
         //source no_crs_no_envelope2.tfw - https://github.com/geotools/geotools/tree/master/modules/plugin/geotiff/src/test/resources/org/geotools/gce/geotiff/test-data
         File tfwFile = new File(classLoader.getResource("geotif/no_crs_no_envelope2.tfw").getFile());
@@ -98,7 +100,7 @@ public class GTModelCovDataTest {
     }
 
     @Test
-    public void testSerializeGeoTifDataWithCRS() throws Exception {
+    public void testSerializeGeoTifWithoutMetaData() throws Exception {
         ClassLoader classLoader = GTModelCovDataTest.class.getClassLoader();
         //source geo.tiff - https://github.com/geotools/geotools/tree/master/modules/plugin/geotiff/src/test/resources/org/geotools/gce/geotiff/test-data
         File tifFile = new File(classLoader.getResource("geotif/geo.tiff").getFile());
@@ -107,7 +109,7 @@ public class GTModelCovDataTest {
         PBCovDataSerializationHandler pbCovDataSerializationHadler = new PBCovDataSerializationHandler();
         FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
         try {
-            pbCovDataSerializationHadler.serialize(tifFile, output);
+            pbCovDataSerializationHadler.serialize(tifFile, output, false);
         } finally {
             output.close();
         }
@@ -115,6 +117,29 @@ public class GTModelCovDataTest {
         System.out.println("Successfully Serialized....");
     }
 
+    @Test
+    public void testDeserializeGeoTifWithMetaData() throws Exception {
+        ClassLoader classLoader = GTModelCovDataTest.class.getClassLoader();
+        //source geo.tiff - https://github.com/geotools/geotools/tree/master/modules/plugin/geotiff/src/test/resources/org/geotools/gce/geotiff/test-data
+        File tifFile = new File(classLoader.getResource("geotif/geo.tiff").getFile());
+        System.out.println("-------------- Deserializing Geotif coverage Model via Protobuf -------------------------");
+        PBCovDataSerializationHandler pbCovDataSerializationHandler = new PBCovDataSerializationHandler();
+        FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
+
+        try {
+            pbCovDataSerializationHandler.serialize(tifFile, output, true);
+            PBCovDataDeserializationHandler pbCovDatadeSerializationHandler = new PBCovDataDeserializationHandler();
+            GridCoverage2D gridCoverage = pbCovDatadeSerializationHandler.deserialize("testgeotif", new FileInputStream(Utils.TEST_FILE_LOCATION));
+            GridEnvelope dimensions = gridCoverage.getGridGeometry().getGridRange();
+            GridCoordinates maxDimensions = dimensions.getHigh();
+            assertEquals(119, maxDimensions.getCoordinateValue(0));
+            assertEquals(119, maxDimensions.getCoordinateValue(1));
+            assertEquals("EPSG:4301", CRS.lookupIdentifier(gridCoverage.getCoordinateReferenceSystem(), true));
+        } finally {
+            output.close();
+        }
+        System.out.println("Successfully Deserialized....");
+    }
     @After
     public void tearDown() throws Exception {
         Path filePath = Paths.get(Utils.TEST_FILE_LOCATION);

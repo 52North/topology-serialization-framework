@@ -21,14 +21,12 @@ package org.n52.tsf.model.gt;
 
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.geotools.coverage.grid.GridCoverageFactory;
-import org.geotools.data.WorldFileReader;
 import org.geotools.geometry.GeneralEnvelope;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.operation.matrix.GeneralMatrix;
 import org.geotools.referencing.operation.transform.ProjectiveTransform;
 import org.n52.tsf.serialization.protobuf.gen.GeoProtobufCov;
-import org.opengis.geometry.Envelope;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
 
@@ -44,15 +42,22 @@ public class PBCovDataDeserializationHandler {
         GeoProtobufCov.Grid pbGrid = GeoProtobufCov.Grid.parseFrom(inputStream);
         GridCoverageFactory factory = new GridCoverageFactory();
         BufferedImage image = new BufferedImage(pbGrid.getMaxWidth(), pbGrid.getMaxHight(), pbGrid.getColorSpace());
-        CoordinateReferenceSystem crs= CRS.decode(pbGrid.getSourceCrs());
-        //TODO add wild card check
-        ReferencedEnvelope rEnvelope = new ReferencedEnvelope(0, pbGrid.getMaxWidth(), 0, pbGrid.getMaxHight(), crs);
-        MathTransform mathTransform = createMathtransform(pbGrid);
+        ReferencedEnvelope rEnvelope = new ReferencedEnvelope(0, pbGrid.getMaxWidth(), 0, pbGrid.getMaxHight(), null);
+        MathTransform mathTransform;
+        //TODO add model transformation support
+        if (pbGrid.hasPixelScale() && pbGrid.getTiePointsCount() > 0) {
+            mathTransform = createMathtransformFromMetaData(pbGrid.getTiePoints(0), pbGrid.getPixelScale());
+        } else {
+            mathTransform = createMathtransformFromTfw(pbGrid);
+        }
+        CoordinateReferenceSystem crs = CRS.decode(pbGrid.getSourceCrs());
         GeneralEnvelope envelope = CRS.transform(mathTransform, rEnvelope);
+        envelope.setCoordinateReferenceSystem(crs);
+
         return factory.create(covName, image, envelope);
     }
 
-    private MathTransform createMathtransform(GeoProtobufCov.Grid pbGrid){
+    private MathTransform createMathtransformFromTfw(GeoProtobufCov.Grid pbGrid){
         GeneralMatrix gm = new GeneralMatrix(3);
         gm.setElement(0, 0, pbGrid.getXPixelSize());
         gm.setElement(1, 1, pbGrid.getYPixelSize());
@@ -60,6 +65,17 @@ public class PBCovDataDeserializationHandler {
         gm.setElement(1, 0, pbGrid.getYRotation());
         gm.setElement(0, 2, pbGrid.getXulc());
         gm.setElement(1, 2, pbGrid.getYulc());
+        return ProjectiveTransform.create(gm);
+    }
+
+    public static MathTransform createMathtransformFromMetaData(GeoProtobufCov.TiePoint tiePoints, GeoProtobufCov.PixelScale pixScales) {
+        GeneralMatrix gm = new GeneralMatrix(3);
+        gm.setElement(0, 0, pixScales.getScaleX());
+        gm.setElement(1, 1, -pixScales.getScaleY());
+        gm.setElement(0, 1, 0);
+        gm.setElement(1, 0, 0);
+        gm.setElement(0, 2, tiePoints.getValue(3));
+        gm.setElement(1, 2, tiePoints.getValue(4));
         return ProjectiveTransform.create(gm);
     }
 }
