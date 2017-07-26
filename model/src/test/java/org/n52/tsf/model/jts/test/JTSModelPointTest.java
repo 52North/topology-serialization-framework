@@ -25,6 +25,7 @@ import org.junit.Test;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
+import org.n52.tsf.model.jts.AvroDeserializationHandler;
 import org.n52.tsf.model.jts.AvroSerializationHandler;
 import org.n52.tsf.model.jts.PBDeserializationHandler;
 import org.n52.tsf.model.jts.PBSerializationHandler;
@@ -65,6 +66,25 @@ public class JTSModelPointTest {
     }
 
     @Test
+    public void testDeserializeGeoPoint() throws Exception {
+        GeometryFactory geometryFactory = new GeometryFactory();
+        Coordinate coordinate = new Coordinate(1,2);
+        Point point = geometryFactory.createPoint(coordinate);
+        PBSerializationHandler pbSerializer = new PBSerializationHandler();
+        FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
+        try {
+            pbSerializer.serialize(point,output);
+            System.out.println("-------------- Deserializing JTS Model Point via Protobuf ------------------------");
+            PBDeserializationHandler pbDeserializationHandler = new PBDeserializationHandler();
+            Point pointDeserialized = (Point) pbDeserializationHandler.deserialize(new FileInputStream(Utils.TEST_FILE_LOCATION));
+            assertEquals(point, pointDeserialized);
+            System.out.println("Successfully Deserialized : " + pointDeserialized);
+        } finally {
+            output.close();
+        }
+    }
+
+    @Test
     public void testSerializeGeoPointWithAvro() throws Exception {
         GeometryFactory geometryFactory = new GeometryFactory();
         Coordinate coordinate = new Coordinate(1,2);
@@ -82,17 +102,17 @@ public class JTSModelPointTest {
     }
 
     @Test
-    public void testDeserializeGeoPoint() throws Exception {
+    public void testDeserializeGeoPointWithAvro() throws Exception {
         GeometryFactory geometryFactory = new GeometryFactory();
         Coordinate coordinate = new Coordinate(1,2);
         Point point = geometryFactory.createPoint(coordinate);
-        PBSerializationHandler pbSerializer = new PBSerializationHandler();
+        AvroSerializationHandler avroSerializer = new AvroSerializationHandler();
         FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
         try {
-            pbSerializer.serialize(point,output);
-            System.out.println("-------------- Deserializing JTS Model Point via Protobuf ------------------------");
-            PBDeserializationHandler pbDeserializationHandler = new PBDeserializationHandler();
-            Point pointDeserialized = (Point) pbDeserializationHandler.deserialize(new FileInputStream(Utils.TEST_FILE_LOCATION));
+            avroSerializer.serialize(point,output);
+            System.out.println("-------------- Deserializing JTS Model Point via Avro ------------------------");
+            AvroDeserializationHandler avroDeserializationHandler = new AvroDeserializationHandler();
+            Point pointDeserialized = (Point) avroDeserializationHandler.deserialize(new FileInputStream(Utils.TEST_FILE_LOCATION));
             assertEquals(point, pointDeserialized);
             System.out.println("Successfully Deserialized : " + pointDeserialized);
         } finally {

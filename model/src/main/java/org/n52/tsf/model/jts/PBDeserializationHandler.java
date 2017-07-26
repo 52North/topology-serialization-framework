@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * This class provides the JTS to ProtoBuf Serialization functionality.
+ * This class provides the JTS to ProtoBuf Deserialization functionality.
  */
 public class PBDeserializationHandler {
     final static Logger logger = Logger.getLogger(PBDeserializationHandler.class);
