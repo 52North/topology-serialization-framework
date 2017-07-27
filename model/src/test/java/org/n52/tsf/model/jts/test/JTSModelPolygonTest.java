@@ -81,12 +81,6 @@ public class JTSModelPolygonTest {
         assertTrue(new File(Utils.TEST_FILE_LOCATION).length() > 0);
     }
 
-    @After
-    public void tearDown() throws Exception {
-        Path filePath = Paths.get(Utils.TEST_FILE_LOCATION);
-        Files.deleteIfExists(filePath);
-    }
-
         @Test
     public void deserializeGeoPolygonTestC() throws Exception {
         GeometryFactory geometryFactory = new GeometryFactory();
@@ -126,5 +120,11 @@ public class JTSModelPolygonTest {
         } finally {
             output.close();
         }
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        Path filePath = Paths.get(Utils.TEST_FILE_LOCATION);
+        Files.deleteIfExists(filePath);
     }
 }

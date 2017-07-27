@@ -26,14 +26,17 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LinearRing;
 import org.locationtech.jts.geom.Polygon;
+import org.n52.tsf.model.jts.AvroDeserializationHandler;
 import org.n52.tsf.model.jts.AvroSerializationHandler;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class JTS2AvroPolygonTest {
@@ -53,7 +56,7 @@ public class JTS2AvroPolygonTest {
         AvroSerializationHandler avroSerializer = new AvroSerializationHandler();
         FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
         try {
-            avroSerializer.serialize(polygon,output);
+            avroSerializer.serialize(polygon, output);
         } finally {
             output.close();
         }
@@ -72,11 +75,52 @@ public class JTS2AvroPolygonTest {
         AvroSerializationHandler avroSerializer = new AvroSerializationHandler();
         FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
         try {
-            avroSerializer.serialize(polygon,output);
+            avroSerializer.serialize(polygon, output);
         } finally {
             output.close();
         }
         assertTrue(new File(Utils.TEST_FILE_LOCATION).length() > 0);
+    }
+
+    @Test
+    public void deserializeGeoPolygonTestC() throws Exception {
+        GeometryFactory geometryFactory = new GeometryFactory();
+        Polygon polygon = geometryFactory.createPolygon(new Coordinate[]{
+                new Coordinate(0, 0), new Coordinate(10, 0), new Coordinate(0, 10), new Coordinate(10, 10), new Coordinate(0, 0)});
+        AvroSerializationHandler avroSerializer = new AvroSerializationHandler();
+        FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
+        try {
+            avroSerializer.serialize(polygon, output);
+            System.out.println("-------------- Deserializing JTS Model Polygon without holes via Avro -------------------------");
+            AvroDeserializationHandler avroDeserializationHandler = new AvroDeserializationHandler();
+            Polygon polygonDeserialized = (Polygon) avroDeserializationHandler.deserialize(new FileInputStream(Utils.TEST_FILE_LOCATION));
+            assertEquals(polygon, polygonDeserialized);
+            System.out.println("Successfully Deserialized : " + polygonDeserialized);
+        } finally {
+            output.close();
+        }
+    }
+
+    @Test
+    public void deserializeGeoPolygonTestD() throws Exception {
+        GeometryFactory geometryFactory = new GeometryFactory();
+        LinearRing externalLR = geometryFactory.createLinearRing(new Coordinate[]{
+                new Coordinate(0, 0), new Coordinate(10, 0), new Coordinate(0, 10), new Coordinate(10, 10), new Coordinate(0, 0)});
+        LinearRing[] internalLRs = new LinearRing[]{geometryFactory.createLinearRing(new Coordinate[]{
+                new Coordinate(2, 2), new Coordinate(2, 3), new Coordinate(3, 3), new Coordinate(3, 2), new Coordinate(2, 2)})};
+        Polygon polygon = geometryFactory.createPolygon(externalLR, internalLRs);
+        AvroSerializationHandler avroSerializer = new AvroSerializationHandler();
+        FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
+        try {
+            avroSerializer.serialize(polygon, output);
+            System.out.println("----------------- Deserializing JTS Model Polygon with holes via Avro -------------------------");
+            AvroDeserializationHandler avroDeserializationHandler = new AvroDeserializationHandler();
+            Polygon polygonSerialized = (Polygon) avroDeserializationHandler.deserialize(new FileInputStream(Utils.TEST_FILE_LOCATION));
+            assertEquals(polygon, polygonSerialized);
+            System.out.println("Successfully Deserialized : " + polygonSerialized);
+        } finally {
+            output.close();
+        }
     }
 
     @After

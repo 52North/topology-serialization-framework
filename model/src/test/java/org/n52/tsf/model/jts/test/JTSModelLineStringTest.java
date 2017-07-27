@@ -25,6 +25,7 @@ import org.junit.Test;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LineString;
+import org.n52.tsf.model.jts.AvroDeserializationHandler;
 import org.n52.tsf.model.jts.AvroSerializationHandler;
 import org.n52.tsf.model.jts.PBDeserializationHandler;
 import org.n52.tsf.model.jts.PBSerializationHandler;
@@ -56,7 +57,7 @@ public class JTSModelLineStringTest {
         PBSerializationHandler pbSerializer = new PBSerializationHandler();
         FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
         try {
-            pbSerializer.serialize(lineString,output);
+            pbSerializer.serialize(lineString, output);
         } finally {
             output.close();
         }
@@ -73,7 +74,7 @@ public class JTSModelLineStringTest {
         AvroSerializationHandler avroSerializer = new AvroSerializationHandler();
         FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
         try {
-            avroSerializer.serialize(lineString,output);
+            avroSerializer.serialize(lineString, output);
         } finally {
             output.close();
         }
@@ -89,10 +90,29 @@ public class JTSModelLineStringTest {
         PBSerializationHandler pbSerializer = new PBSerializationHandler();
         FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
         try {
-            pbSerializer.serialize(lineString,output);
+            pbSerializer.serialize(lineString, output);
             System.out.println("-------------- Deserializing JTS Model LineString via Protobuf -------------------------");
             PBDeserializationHandler pbDeserializationHandler = new PBDeserializationHandler();
             LineString lineStringDeserialized = (LineString) pbDeserializationHandler.deserialize(new FileInputStream(Utils.TEST_FILE_LOCATION));
+            assertEquals(lineString, lineStringDeserialized);
+            System.out.println("Successfully Deserialized : " + lineStringDeserialized);
+        } finally {
+            output.close();
+        }
+    }
+
+    @Test
+    public void testDeserializeGeoLineStringWithAvro() throws Exception {
+        GeometryFactory geometryFactory = new GeometryFactory();
+        LineString lineString = geometryFactory.createLineString(new Coordinate[]{
+                new Coordinate(0, 0), new Coordinate(1, 0), new Coordinate(1, 1)});
+        AvroSerializationHandler avroSerializer = new AvroSerializationHandler();
+        FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
+        try {
+            avroSerializer.serialize(lineString, output);
+            System.out.println("-------------- Deserializing JTS Model LineString via Avro -------------------------");
+            AvroDeserializationHandler avroDeserializationHandler = new AvroDeserializationHandler();
+            LineString lineStringDeserialized = (LineString) avroDeserializationHandler.deserialize(new FileInputStream(Utils.TEST_FILE_LOCATION));
             assertEquals(lineString, lineStringDeserialized);
             System.out.println("Successfully Deserialized : " + lineStringDeserialized);
         } finally {
