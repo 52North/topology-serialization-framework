@@ -30,7 +30,7 @@
 {"namespace": "org.n52.tsf.serialization.avro.gen",
  "type": "enum",
  "name": "Type",
- "symbols" : ["POINT", "LINESTRING", "POLYGON", "LINEARRING"]
+ "symbols" : ["POINT", "LINESTRING", "POLYGON", "LINEARRING", "MULTIPOINT", "MULTILINESTRING", "MULTIPOLYGON", "LINE", "TRIANGLE"]
 },
 {"namespace": "org.n52.tsf.serialization.avro.gen",
  "type": "record",
