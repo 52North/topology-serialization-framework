@@ -24,6 +24,8 @@ import org.apache.avro.io.DatumWriter;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.log4j.Logger;
 import org.locationtech.jts.geom.*;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Geometry;
 import org.n52.tsf.serialization.avro.gen.Type;
 
 import java.io.IOException;
@@ -43,14 +45,40 @@ public class AvroSerializationHandler {
         org.n52.tsf.serialization.avro.gen.Geometry avroGeometry;
         if (jtsGeometry instanceof Point) {
             avroGeometry = serializePoint((Point) jtsGeometry);
-        }else if (jtsGeometry instanceof LineString) {
+        } else if (jtsGeometry instanceof LinearRing) {
+            avroGeometry = serializeLinearRing((LinearRing) jtsGeometry);
+        } else if (jtsGeometry instanceof LineString) {
             avroGeometry = serializeLineString((LineString) jtsGeometry);
-    } else if (jtsGeometry instanceof Polygon) {
+        } else if (jtsGeometry instanceof Polygon) {
             avroGeometry = serializePolygon((Polygon) jtsGeometry);
+        } else if (jtsGeometry instanceof MultiPoint) {
+            avroGeometry = serializeMultiPoint((MultiPoint) jtsGeometry);
+        } else if (jtsGeometry instanceof MultiLineString) {
+            avroGeometry = serializeMultiLineString((MultiLineString) jtsGeometry);
+        } else if (jtsGeometry instanceof MultiPolygon) {
+            avroGeometry = serializeMultiPolygon((MultiPolygon) jtsGeometry);
         } else {
-            throw new IllegalArgumentException("Unsupported Geometric type");
+            throw new IllegalArgumentException("Unsupported Geometric type for Avro Serialization");
         }
 
+        DatumWriter<org.n52.tsf.serialization.avro.gen.Geometry> datumWriter = new SpecificDatumWriter<>(org.n52.tsf.serialization.avro.gen.Geometry.class);
+        DataFileWriter<org.n52.tsf.serialization.avro.gen.Geometry> dataFileWriter = new DataFileWriter<>(datumWriter);
+        dataFileWriter.create(avroGeometry.getSchema(), outputStream);
+        dataFileWriter.append(avroGeometry);
+        dataFileWriter.close();
+    }
+
+    public void serialize(LineSegment jtsLine, OutputStream outputStream) throws IOException {
+        org.n52.tsf.serialization.avro.gen.Geometry avroGeometry = serializeLine(jtsLine);
+        DatumWriter<org.n52.tsf.serialization.avro.gen.Geometry> datumWriter = new SpecificDatumWriter<>(org.n52.tsf.serialization.avro.gen.Geometry.class);
+        DataFileWriter<org.n52.tsf.serialization.avro.gen.Geometry> dataFileWriter = new DataFileWriter<>(datumWriter);
+        dataFileWriter.create(avroGeometry.getSchema(), outputStream);
+        dataFileWriter.append(avroGeometry);
+        dataFileWriter.close();
+    }
+
+    public void serialize(Triangle jtsTriangle, OutputStream outputStream) throws IOException {
+        org.n52.tsf.serialization.avro.gen.Geometry avroGeometry = serializeTriangle(jtsTriangle);
         DatumWriter<org.n52.tsf.serialization.avro.gen.Geometry> datumWriter = new SpecificDatumWriter<>(org.n52.tsf.serialization.avro.gen.Geometry.class);
         DataFileWriter<org.n52.tsf.serialization.avro.gen.Geometry> dataFileWriter = new DataFileWriter<>(datumWriter);
         dataFileWriter.create(avroGeometry.getSchema(), outputStream);
@@ -62,15 +90,9 @@ public class AvroSerializationHandler {
         if (jtsPoint.getCoordinates().length == 0) {
             throw new IllegalArgumentException("No Coordinate data available");
         } else {
-            org.n52.tsf.serialization.avro.gen.Geometry.Builder geoPoint = org.n52.tsf.serialization.avro.gen.
-                    Geometry.newBuilder();
-            geoPoint.setType(org.n52.tsf.serialization.avro.gen.Type.POINT);
             List<org.n52.tsf.serialization.avro.gen.Coordinate> coordinateList = new ArrayList<>();
             coordinateList.add(createCoordinate(jtsPoint.getCoordinate()));
-            geoPoint.setCoordinates(coordinateList);
-            List<org.n52.tsf.serialization.avro.gen.Geometry> geometryList = new ArrayList<>();
-            geoPoint.setGeometries(geometryList);
-            return geoPoint.build();
+            return createGeometry(coordinateList, null, org.n52.tsf.serialization.avro.gen.Type.POINT);
         }
     }
 
@@ -84,6 +106,42 @@ public class AvroSerializationHandler {
             }
             return createGeometry(coordinateList, null, org.n52.tsf.serialization.avro.gen.Type.LINESTRING);
         }
+    }
+
+    private org.n52.tsf.serialization.avro.gen.Geometry serializeMultiPoint(MultiPoint jtsMultiPoint) throws IOException {
+        List<org.n52.tsf.serialization.avro.gen.Geometry> geometries = new ArrayList<>();
+        for (int i = 0; i < jtsMultiPoint.getNumGeometries(); i++) {
+            geometries.add(serializePoint((Point) jtsMultiPoint.getGeometryN(i)));
+        }
+        return createGeometry(null, geometries, org.n52.tsf.serialization.avro.gen.Type.MULTIPOINT);
+    }
+
+    private org.n52.tsf.serialization.avro.gen.Geometry serializeMultiLineString(MultiLineString jtsMultiLineString) throws IOException {
+        List<org.n52.tsf.serialization.avro.gen.Geometry> geometries = new ArrayList<>();
+        for (int i = 0; i < jtsMultiLineString.getNumGeometries(); i++) {
+            geometries.add(serializeLineString((LineString) jtsMultiLineString.getGeometryN(i)));
+        }
+        return createGeometry(null, geometries, org.n52.tsf.serialization.avro.gen.Type.MULTILINESTRING);
+    }
+
+    private org.n52.tsf.serialization.avro.gen.Geometry serializeLinearRing(LineString jtsLinearRing) throws IOException {
+        if (jtsLinearRing.getCoordinates().length < 2) {
+            throw new IllegalArgumentException("Insufficient Coordinates");
+        } else {
+            List<org.n52.tsf.serialization.avro.gen.Coordinate> coordinateList = new ArrayList<>();
+            for (Coordinate coord : jtsLinearRing.getCoordinates()) {
+                coordinateList.add(createCoordinate(coord));
+            }
+            return createGeometry(coordinateList, null, org.n52.tsf.serialization.avro.gen.Type.LINEARRING);
+        }
+    }
+
+    public org.n52.tsf.serialization.avro.gen.Geometry serializeMultiPolygon(MultiPolygon jtsMultiPolygon) throws IOException {
+        List<org.n52.tsf.serialization.avro.gen.Geometry> geometries = new ArrayList<>();
+        for (int i = 0; i < jtsMultiPolygon.getNumGeometries(); i++) {
+            geometries.add(serializePolygon((Polygon) jtsMultiPolygon.getGeometryN(i)));
+        }
+        return createGeometry(null, geometries, org.n52.tsf.serialization.avro.gen.Type.MULTIPOLYGON);
     }
 
     private org.n52.tsf.serialization.avro.gen.Geometry serializePolygon(Polygon jtsPolygon) {
@@ -102,11 +160,38 @@ public class AvroSerializationHandler {
                 for (Coordinate coord : interiorLS.getCoordinates()) {
                     inCoordinateList.add(createCoordinate(coord));
                 }
-                interiorGeos.add(createGeometry(inCoordinateList, null, Type.LINEARRING));
+                interiorGeos.add(createGeometry(inCoordinateList, null, org.n52.tsf.serialization.avro.gen.Type.LINEARRING));
             }
         }
+        return createGeometry(exCoordinateList, interiorGeos, org.n52.tsf.serialization.avro.gen.Type.POLYGON);
+    }
 
-        return createGeometry(exCoordinateList, interiorGeos, Type.POLYGON);
+    private org.n52.tsf.serialization.avro.gen.Geometry serializeLine(LineSegment jtsLineSegment) throws IOException {
+        Coordinate p0 = jtsLineSegment.getCoordinate(0);
+        Coordinate p1 = jtsLineSegment.getCoordinate(1);
+        if (p0 == null || p1 == null) {
+            throw new IllegalArgumentException("Insufficient Coordinates");
+        } else {
+            List<org.n52.tsf.serialization.avro.gen.Coordinate> coordinateList = new ArrayList<>();
+            coordinateList.add(createCoordinate(p0));
+            coordinateList.add(createCoordinate(p1));
+            return createGeometry(coordinateList, null, org.n52.tsf.serialization.avro.gen.Type.LINE);
+        }
+    }
+
+    private org.n52.tsf.serialization.avro.gen.Geometry serializeTriangle(Triangle jtsTriangle) throws IOException {
+        Coordinate p0 = jtsTriangle.p0;
+        Coordinate p1 = jtsTriangle.p1;
+        Coordinate p2 = jtsTriangle.p2;
+        if (p0 == null || p1 == null || p2 == null) {
+            throw new IllegalArgumentException("Insufficient Coordinates");
+        } else {
+            List<org.n52.tsf.serialization.avro.gen.Coordinate> coordinateList = new ArrayList<>();
+            coordinateList.add(createCoordinate(p0));
+            coordinateList.add(createCoordinate(p1));
+            coordinateList.add(createCoordinate(p2));
+            return createGeometry(coordinateList, null, org.n52.tsf.serialization.avro.gen.Type.TRIANGLE);
+        }
     }
 
     private org.n52.tsf.serialization.avro.gen.Coordinate createCoordinate(Coordinate jtsCoordinate) {

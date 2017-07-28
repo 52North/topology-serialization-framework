@@ -50,7 +50,7 @@ public class PBSerializationHandler {
         }else if (jtsGeometry instanceof MultiPolygon) {
             pbGeometry = serializeMultiPolygon((MultiPolygon) jtsGeometry);
         } else {
-            throw new IllegalArgumentException("Unsupported Geometric type");
+            throw new IllegalArgumentException("Unsupported Geometric type for Protobuf Serialization");
         }
         pbGeometry.writeTo(outputStream);
     }
