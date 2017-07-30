@@ -23,6 +23,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.locationtech.jts.geom.*;
+import org.n52.tsf.model.jts.AvroDeserializationHandler;
+import org.n52.tsf.model.jts.AvroSerializationHandler;
 import org.n52.tsf.model.jts.PBDeserializationHandler;
 import org.n52.tsf.model.jts.PBSerializationHandler;
 
@@ -78,6 +80,48 @@ public class JTSModelMultiLineStringTest {
             System.out.println("-------------- Deserializing JTS Model MultiLineString via Protobuf -------------------------");
             PBDeserializationHandler pbDeserializationHandler = new PBDeserializationHandler();
             MultiLineString multiLineStringDeserialized = (MultiLineString) pbDeserializationHandler.deserialize(new FileInputStream(Utils.TEST_FILE_LOCATION));
+            assertEquals(multiLineString, multiLineStringDeserialized);
+            System.out.println("Successfully Deserialized : " + multiLineStringDeserialized);
+        } finally {
+            output.close();
+        }
+    }
+
+    @Test
+    public void testSerializeGeoMultiLineStringWithAvro() throws Exception {
+        GeometryFactory geometryFactory = new GeometryFactory();
+        LineString lineString1 = geometryFactory.createLineString(new Coordinate[]{
+                new Coordinate(0, 0), new Coordinate(1, 0), new Coordinate(1, 1)});
+        LineString lineString2 = geometryFactory.createLineString(new Coordinate[]{
+                new Coordinate(1, 1), new Coordinate(2, 1), new Coordinate(2, 2)});
+        MultiLineString multiLineString = geometryFactory.createMultiLineString(new LineString[]{lineString1, lineString2});
+        System.out.println("-------------- Serializing JTS Model MultiLineString via Avro -------------------------");
+        AvroSerializationHandler avroSerializer = new AvroSerializationHandler();
+        FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
+        try {
+            avroSerializer.serialize(multiLineString, output);
+        } finally {
+            output.close();
+        }
+        assertTrue(new File(Utils.TEST_FILE_LOCATION).length() > 0);
+        System.out.println("Successfully Serialized....");
+    }
+
+    @Test
+    public void testDeserializeGeoMultiLineStringWithAvro() throws Exception {
+        GeometryFactory geometryFactory = new GeometryFactory();
+        LineString lineString1 = geometryFactory.createLineString(new Coordinate[]{
+                new Coordinate(0, 0), new Coordinate(1, 0), new Coordinate(1, 1)});
+        LineString lineString2 = geometryFactory.createLineString(new Coordinate[]{
+                new Coordinate(1, 1), new Coordinate(2, 1), new Coordinate(2, 2)});
+        MultiLineString multiLineString = geometryFactory.createMultiLineString(new LineString[]{lineString1, lineString2});
+        AvroSerializationHandler avroSerializer = new AvroSerializationHandler();
+        FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
+        try {
+            avroSerializer.serialize(multiLineString, output);
+            System.out.println("-------------- Deserializing JTS Model MultiLineString via Avro -------------------------");
+            AvroDeserializationHandler avroDeserializationHandler = new AvroDeserializationHandler();
+            MultiLineString multiLineStringDeserialized = (MultiLineString) avroDeserializationHandler.deserialize(new FileInputStream(Utils.TEST_FILE_LOCATION));
             assertEquals(multiLineString, multiLineStringDeserialized);
             System.out.println("Successfully Deserialized : " + multiLineStringDeserialized);
         } finally {

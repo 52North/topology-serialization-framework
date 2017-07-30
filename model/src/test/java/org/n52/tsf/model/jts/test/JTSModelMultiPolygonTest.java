@@ -26,6 +26,8 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.MultiPolygon;
 import org.locationtech.jts.geom.Polygon;
+import org.n52.tsf.model.jts.AvroDeserializationHandler;
+import org.n52.tsf.model.jts.AvroSerializationHandler;
 import org.n52.tsf.model.jts.PBDeserializationHandler;
 import org.n52.tsf.model.jts.PBSerializationHandler;
 
@@ -68,12 +70,6 @@ public class JTSModelMultiPolygonTest {
         assertTrue(new File(Utils.TEST_FILE_LOCATION).length() > 0);
     }
 
-    @After
-    public void tearDown() throws Exception {
-        Path filePath = Paths.get(Utils.TEST_FILE_LOCATION);
-        Files.deleteIfExists(filePath);
-    }
-
     @Test
     public void deserializeGeoMultiPolygonTest() throws Exception {
         GeometryFactory geometryFactory = new GeometryFactory();
@@ -93,6 +89,53 @@ public class JTSModelMultiPolygonTest {
         } finally {
             output.close();
         }
+    }
+
+    @Test
+    public void serializeGeoMultiPolygonTestWithAvro() throws Exception {
+        GeometryFactory geometryFactory = new GeometryFactory();
+        Polygon polygonA = geometryFactory.createPolygon(new Coordinate[]{
+                new Coordinate(0, 0), new Coordinate(10, 0), new Coordinate(0, 10), new Coordinate(10, 10), new Coordinate(0, 0)});
+        Polygon polygonB = geometryFactory.createPolygon(new Coordinate[]{
+                new Coordinate(1, 1), new Coordinate(10, 0), new Coordinate(0, 10), new Coordinate(10, 10), new Coordinate(1, 1)});
+        MultiPolygon multiPolygon = geometryFactory.createMultiPolygon(new Polygon[]{polygonA, polygonB});
+        System.out.println("-------------- Serializing JTS Model MultiPolygon via Avro -------------------------");
+        AvroSerializationHandler avroSerializer = new AvroSerializationHandler();
+        FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
+        try {
+            avroSerializer.serialize(multiPolygon, output);
+            System.out.println("Successfully Serialized....");
+        } finally {
+            output.close();
+        }
+        assertTrue(new File(Utils.TEST_FILE_LOCATION).length() > 0);
+    }
+
+    @Test
+    public void deserializeGeoMultiPolygonTestWithAvro() throws Exception {
+        GeometryFactory geometryFactory = new GeometryFactory();
+        Polygon polygonA = geometryFactory.createPolygon(new Coordinate[]{
+                new Coordinate(0, 0), new Coordinate(10, 0), new Coordinate(0, 10), new Coordinate(10, 10), new Coordinate(0, 0)});
+        Polygon polygonB = geometryFactory.createPolygon(new Coordinate[]{
+                new Coordinate(1, 1), new Coordinate(10, 0), new Coordinate(0, 10), new Coordinate(10, 10), new Coordinate(1, 1)});
+        MultiPolygon multiPolygon = geometryFactory.createMultiPolygon(new Polygon[]{polygonA, polygonB});
+        AvroSerializationHandler avroSerializer = new AvroSerializationHandler();
+        FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
+        try {
+            avroSerializer.serialize(multiPolygon, output);
+            System.out.println("-------------- Deserializing JTS Model MultiPolygon via Avro -------------------------");
+            AvroDeserializationHandler avroDeserializationHandler = new AvroDeserializationHandler();
+            MultiPolygon multiPolygonDeserialized = (MultiPolygon) avroDeserializationHandler.deserialize(new FileInputStream(Utils.TEST_FILE_LOCATION));
+            System.out.println("Successfully Deserialized : " + multiPolygonDeserialized);
+        } finally {
+            output.close();
+        }
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        Path filePath = Paths.get(Utils.TEST_FILE_LOCATION);
+        Files.deleteIfExists(filePath);
     }
 }
 

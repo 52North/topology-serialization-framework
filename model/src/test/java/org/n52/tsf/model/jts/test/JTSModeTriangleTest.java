@@ -26,6 +26,8 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LinearRing;
 import org.locationtech.jts.geom.Triangle;
+import org.n52.tsf.model.jts.AvroDeserializationHandler;
+import org.n52.tsf.model.jts.AvroSerializationHandler;
 import org.n52.tsf.model.jts.PBDeserializationHandler;
 import org.n52.tsf.model.jts.PBSerializationHandler;
 
@@ -72,6 +74,40 @@ public class JTSModeTriangleTest {
             System.out.println("-------------- Deserializing JTS Model Triangle via Protobuf -------------------------");
             PBDeserializationHandler pbDeserializationHandler = new PBDeserializationHandler();
             Triangle triangleDeserialized = pbDeserializationHandler.deserializeTriangle(new FileInputStream(Utils.TEST_FILE_LOCATION));
+            assertEquals(triangle.p0, triangleDeserialized.p0);
+            assertEquals(triangle.p1, triangleDeserialized.p1);
+            assertEquals(triangle.p2, triangleDeserialized.p2);
+            System.out.println("Successfully Deserialized");
+        } finally {
+            output.close();
+        }
+    }
+
+    @Test
+    public void testSerializeGeoTriangleWithAvro() throws Exception {
+        Triangle triangle = new Triangle(new Coordinate(0, 0), new Coordinate(1, 0), new Coordinate(1, 1));
+        System.out.println("-------------- Serializing JTS Model Triangle via Avro -------------------------");
+        AvroSerializationHandler avroSerializer = new AvroSerializationHandler();
+        FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
+        try {
+           avroSerializer.serialize(triangle, output);
+        } finally {
+            output.close();
+        }
+        assertTrue(new File(Utils.TEST_FILE_LOCATION).length() > 0);
+        System.out.println("Successfully Serialized....");
+    }
+
+    @Test
+    public void testDeserializeGeoTriangleWithAvro() throws Exception {
+        Triangle triangle = new Triangle(new Coordinate(0, 0), new Coordinate(1, 0), new Coordinate(1, 1));
+        AvroSerializationHandler avroSerializer = new AvroSerializationHandler();
+        FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
+        try {
+            avroSerializer.serialize(triangle, output);
+            System.out.println("-------------- Deserializing JTS Model Triangle via Avro -------------------------");
+            AvroDeserializationHandler avroDeserializationHandler = new AvroDeserializationHandler();
+            Triangle triangleDeserialized = avroDeserializationHandler.deserializeTriangle(new FileInputStream(Utils.TEST_FILE_LOCATION));
             assertEquals(triangle.p0, triangleDeserialized.p0);
             assertEquals(triangle.p1, triangleDeserialized.p1);
             assertEquals(triangle.p2, triangleDeserialized.p2);
