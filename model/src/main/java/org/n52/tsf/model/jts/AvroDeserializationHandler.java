@@ -1,12 +1,10 @@
 package org.n52.tsf.model.jts;
 
-import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileStream;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.log4j.Logger;
 import org.locationtech.jts.geom.*;
-import org.n52.tsf.serialization.protobuf.gen.GeoProtobuf;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -45,8 +43,20 @@ public class AvroDeserializationHandler {
             case POLYGON:
                 jtsGeometry = deserializePolygon(avroGeometry);
                 break;
+            case MULTIPOINT:
+                jtsGeometry = deserializeMultiPoint(avroGeometry);
+                break;
+            case MULTILINESTRING:
+                jtsGeometry = deserializeMultiLineString(avroGeometry);
+                break;
+            case LINEARRING:
+                jtsGeometry = deserializeLinearRing(avroGeometry);
+                break;
+            case MULTIPOLYGON:
+                jtsGeometry = deserializeMultiPolygon(avroGeometry);
+                break;
             default:
-                logger.error("Unsupported Geometric type");
+                logger.error("Unsupported Geometric type for Avro deserialization");
         }
         return jtsGeometry;
     }
@@ -56,6 +66,34 @@ public class AvroDeserializationHandler {
         Coordinate jtsCoordinate = createJtsCoordinate(coordinates.get(0));
         Point point = geometryFactory.createPoint(jtsCoordinate);
         return point;
+    }
+
+    public LineSegment deserializeLine(InputStream inputStream) throws IOException {
+        DatumReader<org.n52.tsf.serialization.avro.gen.Geometry> datumReader =
+                new SpecificDatumReader<>(org.n52.tsf.serialization.avro.gen.Geometry.class);
+        DataFileStream<org.n52.tsf.serialization.avro.gen.Geometry> dataFileReader = new DataFileStream<>(inputStream, datumReader);
+        org.n52.tsf.serialization.avro.gen.Geometry avroGeometry = null;
+        if (dataFileReader.hasNext()) {
+            avroGeometry = dataFileReader.next();
+        }
+        Coordinate[] jtsCoordinates = avroGeometry.getCoordinates().
+                stream().map(this::createJtsCoordinate).collect(Collectors.toList()).stream().toArray(Coordinate[]::new);
+        LineSegment lineSegment = new LineSegment(jtsCoordinates[0], jtsCoordinates[1]);
+        return lineSegment;
+    }
+
+    public Triangle deserializeTriangle(InputStream inputStream) throws IOException {
+        DatumReader<org.n52.tsf.serialization.avro.gen.Geometry> datumReader =
+                new SpecificDatumReader<>(org.n52.tsf.serialization.avro.gen.Geometry.class);
+        DataFileStream<org.n52.tsf.serialization.avro.gen.Geometry> dataFileReader = new DataFileStream<>(inputStream, datumReader);
+        org.n52.tsf.serialization.avro.gen.Geometry avroGeometry = null;
+        if (dataFileReader.hasNext()) {
+            avroGeometry = dataFileReader.next();
+        }
+        Coordinate[] jtsCoordinates = avroGeometry.getCoordinates().
+                stream().map(this::createJtsCoordinate).collect(Collectors.toList()).stream().toArray(Coordinate[]::new);
+        Triangle triangle = new Triangle(jtsCoordinates[0], jtsCoordinates[1], jtsCoordinates[2]);
+        return triangle;
     }
 
     private Coordinate createJtsCoordinate(org.n52.tsf.serialization.avro.gen.Coordinate avroCoordinate) {
@@ -68,6 +106,13 @@ public class AvroDeserializationHandler {
                 stream().map(this::createJtsCoordinate).collect(Collectors.toList()).stream().toArray(Coordinate[]::new);
         LineString lineString = geometryFactory.createLineString(jtsCoordinates);
         return lineString;
+    }
+
+    private LinearRing deserializeLinearRing(org.n52.tsf.serialization.avro.gen.Geometry avroGeometry) {
+        Coordinate[] jtsCoordinates = avroGeometry.getCoordinates().
+                stream().map(this::createJtsCoordinate).collect(Collectors.toList()).stream().toArray(Coordinate[]::new);
+        LinearRing linearRing = geometryFactory.createLinearRing(jtsCoordinates);
+        return linearRing;
     }
 
     private Polygon deserializePolygon(org.n52.tsf.serialization.avro.gen.Geometry avroGeometry) {
@@ -94,4 +139,27 @@ public class AvroDeserializationHandler {
         }
         return polygon;
     }
+
+    private MultiPolygon deserializeMultiPolygon(org.n52.tsf.serialization.avro.gen.Geometry avroGeometry) {
+        Polygon[] jtsPolygons = avroGeometry.getGeometries().
+                stream().map(this::deserializePolygon).collect(Collectors.toList()).stream().toArray(Polygon[]::new);
+        MultiPolygon multiPolygon = geometryFactory.createMultiPolygon(jtsPolygons);
+        return multiPolygon;
+    }
+
+    private MultiPoint deserializeMultiPoint(org.n52.tsf.serialization.avro.gen.Geometry avroGeometry) {
+        Point[] jtsPoints = avroGeometry.getGeometries().
+                stream().map(this::deserializePoint).collect(Collectors.toList()).stream().toArray(Point[]::new);
+        MultiPoint multiPoint = geometryFactory.createMultiPoint(jtsPoints);
+        return multiPoint;
+    }
+
+    private MultiLineString deserializeMultiLineString(org.n52.tsf.serialization.avro.gen.Geometry avroGeometry) {
+        LineString[] jtsLineStrings = avroGeometry.getGeometries().
+                stream().map(this::deserializeLineString).collect(Collectors.toList()).stream().toArray(LineString[]::new);
+        MultiLineString multiLineString = geometryFactory.createMultiLineString(jtsLineStrings);
+        return multiLineString;
+    }
+
+
 }

@@ -66,7 +66,7 @@ public class PBDeserializationHandler {
                 jtsGeometry = deserializeMultiPolygon(pbGeometry);
                 break;
             default:
-                logger.error("Unsupported Geometric type");
+                logger.error("Unsupported Geometric type for Protobuf deserialization");
         }
         return jtsGeometry;
     }
