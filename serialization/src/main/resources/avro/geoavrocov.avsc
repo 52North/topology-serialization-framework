@@ -1,0 +1,64 @@
+//
+// Licensed to the Apache Software Foundation (ASF) under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The ASF licenses this file
+// to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.  You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
+//
+
+[
+{"namespace": "org.n52.tsf.serialization.avro.gen.raster",
+ "type": "record",
+ "name": "GridPoint",
+ "fields": [
+     {"name": "longitude", "type": "double"},
+     {"name": "latitude", "type": "double"}
+ ]
+},
+{"namespace": "org.n52.tsf.serialization.avro.gen.raster",
+ "type": "record",
+ "name": "TiePoint",
+ "fields": [
+     {"name": "values", "type": { "type": "array", "items": "double"}}
+ ]
+},
+{"namespace": "org.n52.tsf.serialization.avro.gen.raster",
+ "type": "record",
+ "name": "PixelScale",
+ "fields": [
+     {"name": "scale_x", "type": "double"},
+     {"name": "scale_y", "type": "double"},
+     {"name": "scale_z", "type": "double"}
+ ]
+},
+{"namespace": "org.n52.tsf.serialization.avro.gen.raster",
+ "type": "record",
+ "name": "Grid",
+ "fields": [
+     {"name": "xulc", "type": "double"},
+     {"name": "yulc", "type": "double"},
+     {"name": "x_pixel_size", "type": "double"},
+     {"name": "y_pixel_size", "type": "double"},
+     {"name": "x_rotation", "type": "double"},
+     {"name": "y_rotation", "type": "double"},
+     {"name": "max_width", "type": "int"},
+     {"name": "max_hight", "type": "int"},
+     {"name": "source_crs", "type": "string"},
+     {"name": "color_space", "type": "int"},
+     {"name": "tie_points", "type": { "type": "array", "items": "TiePoint"}},
+     {"name": "pixel_scale", "type": "PixelScale"},
+     {"name": "gridPoints", "type": { "type": "array", "items": "GridPoint"}}
+ ]
+}
+]
