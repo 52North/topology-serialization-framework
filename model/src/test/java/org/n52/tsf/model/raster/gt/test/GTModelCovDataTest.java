@@ -17,19 +17,19 @@
 // under the License.
 //
 
-package org.n52.tsf.model.gt.test;
+package org.n52.tsf.model.raster.gt.test;
 
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.geotools.referencing.CRS;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.n52.tsf.model.gt.AvroCovDataDeserializationHandler;
-import org.n52.tsf.model.gt.AvroCovDataSerializationHandler;
-import org.n52.tsf.model.gt.PBCovDataDeserializationHandler;
-import org.n52.tsf.model.gt.PBCovDataSerializationHandler;
-import org.n52.tsf.model.gt.beans.GeoPoint;
-import org.n52.tsf.model.jts.test.Utils;
+import org.n52.tsf.model.raster.gt.AvroCovDataDeserializationHandler;
+import org.n52.tsf.model.raster.gt.AvroCovDataSerializationHandler;
+import org.n52.tsf.model.raster.gt.PBCovDataDeserializationHandler;
+import org.n52.tsf.model.raster.gt.PBCovDataSerializationHandler;
+import org.n52.tsf.model.raster.gt.beans.GeoPoint;
+import org.n52.tsf.model.vector.jts.test.Utils;
 import org.opengis.coverage.grid.GridCoordinates;
 import org.opengis.coverage.grid.GridEnvelope;
 
@@ -49,7 +49,7 @@ public class GTModelCovDataTest {
     @Before
     public void setUp() throws Exception {
         Path filePath = Paths.get(Utils.TEST_FILE_LOCATION);
-        if(Files.notExists(filePath)) {
+        if (Files.notExists(filePath)) {
             Files.createFile(filePath);
         }
     }
@@ -86,7 +86,7 @@ public class GTModelCovDataTest {
         try {
             pbCovDataSerializationHandler.serialize(tifFile, tfwFile, output);
             PBCovDataDeserializationHandler pbCovDatadeSerializationHandler = new PBCovDataDeserializationHandler();
-            GridCoverage2D gridCoverage = pbCovDatadeSerializationHandler.deserialize("testgeotif",new FileInputStream(Utils.TEST_FILE_LOCATION));
+            GridCoverage2D gridCoverage = pbCovDatadeSerializationHandler.deserialize("testgeotif", new FileInputStream(Utils.TEST_FILE_LOCATION));
             GridEnvelope dimensions = gridCoverage.getGridGeometry().getGridRange();
             GridCoordinates maxDimensions = dimensions.getHigh();
             assertEquals(maxDimensions.getCoordinateValue(0), 11);
@@ -193,7 +193,7 @@ public class GTModelCovDataTest {
         try {
             avroCovDataSerializationHandler.serialize(tifFile, tfwFile, output);
             AvroCovDataDeserializationHandler avroCovDatadeSerializationHandler = new AvroCovDataDeserializationHandler();
-            GridCoverage2D gridCoverage = avroCovDatadeSerializationHandler.deserialize("testgeotif",new FileInputStream(Utils.TEST_FILE_LOCATION));
+            GridCoverage2D gridCoverage = avroCovDatadeSerializationHandler.deserialize("testgeotif", new FileInputStream(Utils.TEST_FILE_LOCATION));
             GridEnvelope dimensions = gridCoverage.getGridGeometry().getGridRange();
             GridCoordinates maxDimensions = dimensions.getHigh();
             assertEquals(maxDimensions.getCoordinateValue(0), 11);
@@ -250,7 +250,7 @@ public class GTModelCovDataTest {
         //source geo.tiff - https://github.com/geotools/geotools/tree/master/modules/plugin/geotiff/src/test/resources/org/geotools/gce/geotiff/test-data
         File tifFile = new File(classLoader.getResource("geotif/geo.tiff").getFile());
         System.out.println("-------------- Deserializing Geotif coverage Model via Avro -------------------------");
-       AvroCovDataSerializationHandler avroCovDataSerializationHandler = new AvroCovDataSerializationHandler();
+        AvroCovDataSerializationHandler avroCovDataSerializationHandler = new AvroCovDataSerializationHandler();
         FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
 
         try {
