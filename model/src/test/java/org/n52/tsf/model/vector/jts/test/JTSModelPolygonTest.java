@@ -17,17 +17,14 @@
 // under the License.
 //
 
-package org.n52.tsf.model.jts.test;
+package org.n52.tsf.model.vector.jts.test;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.GeometryFactory;
-import org.locationtech.jts.geom.LinearRing;
-import org.locationtech.jts.geom.Polygon;
-import org.n52.tsf.model.jts.AvroDeserializationHandler;
-import org.n52.tsf.model.jts.AvroSerializationHandler;
+import org.locationtech.jts.geom.*;
+import org.n52.tsf.model.vector.jts.PBDeserializationHandler;
+import org.n52.tsf.model.vector.jts.PBSerializationHandler;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -39,7 +36,7 @@ import java.nio.file.Paths;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class JTS2AvroPolygonTest {
+public class JTSModelPolygonTest {
 
     @Before
     public void setUp() throws Exception {
@@ -52,11 +49,12 @@ public class JTS2AvroPolygonTest {
         GeometryFactory geometryFactory = new GeometryFactory();
         Polygon polygon = geometryFactory.createPolygon(new Coordinate[]{
                 new Coordinate(0, 0), new Coordinate(10, 0), new Coordinate(0, 10), new Coordinate(10, 10), new Coordinate(0, 0)});
-        System.out.println("-------------- Serializing JTS Model Polygon without holes via Avro -------------------------");
-        AvroSerializationHandler avroSerializer = new AvroSerializationHandler();
+        System.out.println("-------------- Serializing JTS Model Polygon without holes via Protobuf -------------------------");
+        PBSerializationHandler pbSerializer = new PBSerializationHandler();
         FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
         try {
-            avroSerializer.serialize(polygon, output);
+            pbSerializer.serialize(polygon, output);
+            System.out.println("Successfully Serialized....");
         } finally {
             output.close();
         }
@@ -71,29 +69,30 @@ public class JTS2AvroPolygonTest {
         LinearRing[] internalLRs = new LinearRing[]{geometryFactory.createLinearRing(new Coordinate[]{
                 new Coordinate(2, 2), new Coordinate(2, 3), new Coordinate(3, 3), new Coordinate(3, 2), new Coordinate(2, 2)})};
         Polygon polygon = geometryFactory.createPolygon(externalLR, internalLRs);
-        System.out.println("----------------- Serializing JTS Model Polygon with holes via Avro -------------------------");
-        AvroSerializationHandler avroSerializer = new AvroSerializationHandler();
+        System.out.println("----------------- Serializing JTS Model Polygon with holes via Protobuf -------------------------");
+        PBSerializationHandler pbSerializer = new PBSerializationHandler();
         FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
         try {
-            avroSerializer.serialize(polygon, output);
+            pbSerializer.serialize(polygon, output);
+            System.out.println("Successfully Serialized....");
         } finally {
             output.close();
         }
         assertTrue(new File(Utils.TEST_FILE_LOCATION).length() > 0);
     }
 
-    @Test
+        @Test
     public void deserializeGeoPolygonTestC() throws Exception {
         GeometryFactory geometryFactory = new GeometryFactory();
         Polygon polygon = geometryFactory.createPolygon(new Coordinate[]{
-                new Coordinate(0, 0), new Coordinate(10, 0), new Coordinate(0, 10), new Coordinate(10, 10), new Coordinate(0, 0)});
-        AvroSerializationHandler avroSerializer = new AvroSerializationHandler();
+                new Coordinate(0, 0), new Coordinate(10, 0), new Coordinate(0, 10),  new Coordinate(10, 10),  new Coordinate(0, 0)});
+        PBSerializationHandler pbSerializer = new PBSerializationHandler();
         FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
         try {
-            avroSerializer.serialize(polygon, output);
-            System.out.println("-------------- Deserializing JTS Model Polygon without holes via Avro -------------------------");
-            AvroDeserializationHandler avroDeserializationHandler = new AvroDeserializationHandler();
-            Polygon polygonDeserialized = (Polygon) avroDeserializationHandler.deserialize(new FileInputStream(Utils.TEST_FILE_LOCATION));
+            pbSerializer.serialize(polygon,output);
+            System.out.println("-------------- Deserializing JTS Model Polygon without holes via Protobuf -------------------------");
+            PBDeserializationHandler pbDeserializationHandler = new PBDeserializationHandler();
+            Polygon polygonDeserialized = (Polygon) pbDeserializationHandler.deserialize(new FileInputStream(Utils.TEST_FILE_LOCATION));
             assertEquals(polygon, polygonDeserialized);
             System.out.println("Successfully Deserialized : " + polygonDeserialized);
         } finally {
@@ -105,17 +104,17 @@ public class JTS2AvroPolygonTest {
     public void deserializeGeoPolygonTestD() throws Exception {
         GeometryFactory geometryFactory = new GeometryFactory();
         LinearRing externalLR = geometryFactory.createLinearRing(new Coordinate[]{
-                new Coordinate(0, 0), new Coordinate(10, 0), new Coordinate(0, 10), new Coordinate(10, 10), new Coordinate(0, 0)});
+                new Coordinate(0, 0), new Coordinate(10, 0), new Coordinate(0, 10),  new Coordinate(10, 10),  new Coordinate(0, 0)});
         LinearRing[] internalLRs = new LinearRing[]{geometryFactory.createLinearRing(new Coordinate[]{
-                new Coordinate(2, 2), new Coordinate(2, 3), new Coordinate(3, 3), new Coordinate(3, 2), new Coordinate(2, 2)})};
+                new Coordinate(2, 2), new Coordinate(2, 3), new Coordinate(3, 3),  new Coordinate(3, 2),  new Coordinate(2, 2)})};
         Polygon polygon = geometryFactory.createPolygon(externalLR, internalLRs);
-        AvroSerializationHandler avroSerializer = new AvroSerializationHandler();
+        PBSerializationHandler pbSerializer = new PBSerializationHandler();
         FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
         try {
-            avroSerializer.serialize(polygon, output);
-            System.out.println("----------------- Deserializing JTS Model Polygon with holes via Avro -------------------------");
-            AvroDeserializationHandler avroDeserializationHandler = new AvroDeserializationHandler();
-            Polygon polygonSerialized = (Polygon) avroDeserializationHandler.deserialize(new FileInputStream(Utils.TEST_FILE_LOCATION));
+            pbSerializer.serialize(polygon,output);
+            System.out.println("----------------- Deserializing JTS Model Polygon with holes via Protobuf -------------------------");
+            PBDeserializationHandler pbDeserializationHandler = new PBDeserializationHandler();
+            Polygon polygonSerialized = (Polygon) pbDeserializationHandler.deserialize(new FileInputStream(Utils.TEST_FILE_LOCATION));
             assertEquals(polygon, polygonSerialized);
             System.out.println("Successfully Deserialized : " + polygonSerialized);
         } finally {
@@ -128,5 +127,4 @@ public class JTS2AvroPolygonTest {
         Path filePath = Paths.get(Utils.TEST_FILE_LOCATION);
         Files.deleteIfExists(filePath);
     }
-
 }

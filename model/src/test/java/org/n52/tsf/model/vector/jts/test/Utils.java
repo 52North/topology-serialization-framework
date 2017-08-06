@@ -17,7 +17,7 @@
 // under the License.
 //
 
-package org.n52.tsf.model.jts.test;
+package org.n52.tsf.model.vector.jts.test;
 
 public class Utils {
     public static final String TEST_FILE_LOCATION = "src/test/resources/jts_data";

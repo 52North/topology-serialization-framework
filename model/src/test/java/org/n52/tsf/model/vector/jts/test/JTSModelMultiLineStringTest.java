@@ -17,16 +17,16 @@
 // under the License.
 //
 
-package org.n52.tsf.model.jts.test;
+package org.n52.tsf.model.vector.jts.test;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.locationtech.jts.geom.*;
-import org.n52.tsf.model.jts.AvroDeserializationHandler;
-import org.n52.tsf.model.jts.AvroSerializationHandler;
-import org.n52.tsf.model.jts.PBDeserializationHandler;
-import org.n52.tsf.model.jts.PBSerializationHandler;
+import org.n52.tsf.model.vector.jts.AvroDeserializationHandler;
+import org.n52.tsf.model.vector.jts.AvroSerializationHandler;
+import org.n52.tsf.model.vector.jts.PBDeserializationHandler;
+import org.n52.tsf.model.vector.jts.PBSerializationHandler;
 
 import java.io.File;
 import java.io.FileInputStream;

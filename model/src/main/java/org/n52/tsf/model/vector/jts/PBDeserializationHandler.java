@@ -17,7 +17,7 @@
 // under the License.
 //
 
-package org.n52.tsf.model.jts;
+package org.n52.tsf.model.vector.jts;
 
 import org.apache.log4j.Logger;
 import org.locationtech.jts.geom.*;

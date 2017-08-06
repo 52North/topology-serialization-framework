@@ -17,7 +17,7 @@
 // under the License.
 //
 
-package org.n52.tsf.model.jts.test;
+package org.n52.tsf.model.vector.jts.test;
 
 import org.junit.After;
 import org.junit.Before;
@@ -26,15 +26,14 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.MultiPolygon;
 import org.locationtech.jts.geom.Polygon;
-import org.n52.tsf.model.jts.AvroDeserializationHandler;
-import org.n52.tsf.model.jts.AvroSerializationHandler;
-import org.n52.tsf.model.jts.PBDeserializationHandler;
-import org.n52.tsf.model.jts.PBSerializationHandler;
+import org.n52.tsf.model.vector.jts.AvroDeserializationHandler;
+import org.n52.tsf.model.vector.jts.AvroSerializationHandler;
+import org.n52.tsf.model.vector.jts.PBDeserializationHandler;
+import org.n52.tsf.model.vector.jts.PBSerializationHandler;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;

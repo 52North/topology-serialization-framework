@@ -17,7 +17,7 @@
 // under the License.
 //
 
-package org.n52.tsf.model.gt;
+package org.n52.tsf.model.raster.gt;
 
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.geotools.coverage.grid.GridEnvelope2D;
@@ -40,39 +40,31 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 
+import static java.lang.Double.NaN;
+
 /**
  * This class provides the Geotools coverage data to ProtoBuf Serialization functionality.
  */
 public class PBCovDataSerializationHandler {
 
     public void serialize(File geotifFile, OutputStream outputStream, boolean serializeMetaData) throws Exception {
-        GeoProtobufCov.Grid.Builder gridBuilder =GeoProtobufCov.Grid.newBuilder();
-        if(serializeMetaData){
-             setCoverageGridData(gridBuilder, geotifFile);
-        }else {
-             transformGridToWorld(gridBuilder, geotifFile);
+        GeoProtobufCov.Grid.Builder gridBuilder = GeoProtobufCov.Grid.newBuilder();
+        if (serializeMetaData) {
+            setMetaData(gridBuilder, geotifFile, null);
+        } else {
+            transformGridToWorld(gridBuilder, geotifFile);
         }
         gridBuilder.build().writeTo(outputStream);
     }
 
     public void serialize(File geotifFile, File tfwfile, OutputStream outputStream) throws Exception {
         GeoProtobufCov.Grid.Builder gridBuilder = GeoProtobufCov.Grid.newBuilder();
-        setCoverageGridData(gridBuilder, geotifFile);
-        setMetaData(gridBuilder, tfwfile);
+        setMetaData(gridBuilder, geotifFile, tfwfile);
         gridBuilder.build().writeTo(outputStream);
     }
 
-    public void setMetaData(GeoProtobufCov.Grid.Builder gridBuilder, File tfwFile) throws IOException {
-        WorldFileReader worldFileReader = new WorldFileReader(tfwFile);
-        gridBuilder.setXulc(worldFileReader.getXULC());
-        gridBuilder.setYulc(worldFileReader.getYULC());
-        gridBuilder.setXPixelSize(worldFileReader.getXPixelSize());
-        gridBuilder.setYPixelSize(worldFileReader.getYPixelSize());
-        gridBuilder.setXRotation(worldFileReader.getRotationX());
-        gridBuilder.setYRotation(worldFileReader.getRotationY());
-    }
 
-    public void setCoverageGridData(GeoProtobufCov.Grid.Builder gridBuilder, File geotifFile) throws IOException, FactoryException {
+    public void setMetaData(GeoProtobufCov.Grid.Builder gridBuilder, File geotifFile, File tfwFile) throws IOException, FactoryException {
         GeoTiffReader fileReader = new GeoTiffReader(geotifFile);
         GeoTiffIIOMetadataDecoder metadata = fileReader.getMetadata();
         AbstractGridFormat format = GridFormatFinder.findFormat(geotifFile);
@@ -85,7 +77,7 @@ public class PBCovDataSerializationHandler {
         gridBuilder.setSourceCrs(CRS.lookupIdentifier(coverage.getCoordinateReferenceSystem(), true));
         gridBuilder.setColorSpace(coverage.getRenderedImage().getColorModel().getColorSpace().getType());
 
-        if(metadata.hasTiePoints()) {
+        if (metadata.hasTiePoints()) {
             for (TiePoint tp : metadata.getModelTiePoints()) {
                 GeoProtobufCov.TiePoint.Builder tiePoint = GeoProtobufCov.TiePoint.newBuilder();
                 for (double value : tp.getData()) {
@@ -95,13 +87,14 @@ public class PBCovDataSerializationHandler {
             }
         }
 
-        if(metadata.hasPixelScales()) {
+        if (metadata.hasPixelScales()) {
             GeoProtobufCov.PixelScale.Builder pixelScale = GeoProtobufCov.PixelScale.newBuilder();
             pixelScale.setScaleX(metadata.getModelPixelScales().getScaleX());
             pixelScale.setScaleY(metadata.getModelPixelScales().getScaleY());
             pixelScale.setScaleZ(metadata.getModelPixelScales().getScaleZ());
             gridBuilder.setPixelScale(pixelScale.build());
         }
+        setTFWData(gridBuilder, tfwFile);
     }
 
     private void transformGridToWorld(GeoProtobufCov.Grid.Builder gridBuilder, File geotifFile) throws IOException, TransformException {
@@ -128,6 +121,26 @@ public class PBCovDataSerializationHandler {
                 gridPoint.setLongitude(longitude);
                 gridBuilder.addGridPoints(gridPoint.build());
             }
+        }
+        setTFWData(gridBuilder, null);
+    }
+
+    private void setTFWData(GeoProtobufCov.Grid.Builder avroBuilder, File tfwFile) throws IOException {
+        if (tfwFile != null) {
+            WorldFileReader worldFileReader = new WorldFileReader(tfwFile);
+            avroBuilder.setXulc(worldFileReader.getXULC());
+            avroBuilder.setYulc(worldFileReader.getYULC());
+            avroBuilder.setXPixelSize(worldFileReader.getXPixelSize());
+            avroBuilder.setYPixelSize(worldFileReader.getYPixelSize());
+            avroBuilder.setXRotation(worldFileReader.getRotationX());
+            avroBuilder.setYRotation(worldFileReader.getRotationY());
+        } else {
+            avroBuilder.setXulc(NaN);
+            avroBuilder.setYulc(NaN);
+            avroBuilder.setXPixelSize(NaN);
+            avroBuilder.setYPixelSize(NaN);
+            avroBuilder.setXRotation(NaN);
+            avroBuilder.setYRotation(NaN);
         }
     }
 }

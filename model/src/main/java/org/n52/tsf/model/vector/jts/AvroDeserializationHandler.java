@@ -1,4 +1,4 @@
-package org.n52.tsf.model.jts;
+package org.n52.tsf.model.vector.jts;
 
 import org.apache.avro.file.DataFileStream;
 import org.apache.avro.io.DatumReader;

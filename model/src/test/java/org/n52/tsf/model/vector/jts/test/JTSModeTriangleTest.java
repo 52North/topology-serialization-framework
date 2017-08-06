@@ -17,19 +17,17 @@
 // under the License.
 //
 
-package org.n52.tsf.model.jts.test;
+package org.n52.tsf.model.vector.jts.test;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.GeometryFactory;
-import org.locationtech.jts.geom.LineSegment;
-import org.locationtech.jts.geom.LinearRing;
-import org.n52.tsf.model.jts.AvroDeserializationHandler;
-import org.n52.tsf.model.jts.AvroSerializationHandler;
-import org.n52.tsf.model.jts.PBDeserializationHandler;
-import org.n52.tsf.model.jts.PBSerializationHandler;
+import org.locationtech.jts.geom.Triangle;
+import org.n52.tsf.model.vector.jts.AvroDeserializationHandler;
+import org.n52.tsf.model.vector.jts.AvroSerializationHandler;
+import org.n52.tsf.model.vector.jts.PBDeserializationHandler;
+import org.n52.tsf.model.vector.jts.PBSerializationHandler;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -41,7 +39,7 @@ import java.nio.file.Paths;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class JTSModellineSegmentTest {
+public class JTSModeTriangleTest {
 
     @Before
     public void setUp() throws Exception {
@@ -50,14 +48,13 @@ public class JTSModellineSegmentTest {
     }
 
     @Test
-    public void testSerializeGeoLineSegment() throws Exception {
-        LineSegment lineSegment = new LineSegment(
-                new Coordinate(0, 0), new Coordinate(1, 0));
-        System.out.println("-------------- Serializing JTS Model LineSegment via Protobuf -------------------------");
+    public void testSerializeGeoTriangle() throws Exception {
+        Triangle triangle = new Triangle(new Coordinate(0, 0), new Coordinate(1, 0), new Coordinate(1, 1));
+        System.out.println("-------------- Serializing JTS Model Triangle via Protobuf -------------------------");
         PBSerializationHandler pbSerializer = new PBSerializationHandler();
         FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
         try {
-            pbSerializer.serialize(lineSegment, output);
+            pbSerializer.serialize(triangle, output);
         } finally {
             output.close();
         }
@@ -66,32 +63,32 @@ public class JTSModellineSegmentTest {
     }
 
     @Test
-    public void testDeserializeGeoLineSegment() throws Exception {
-        LineSegment lineSegment = new LineSegment(
-                new Coordinate(0, 0), new Coordinate(1, 0));
+    public void testDeserializeGeoTriangle() throws Exception {
+        Triangle triangle = new Triangle(new Coordinate(0, 0), new Coordinate(1, 0), new Coordinate(1, 1));
         PBSerializationHandler pbSerializer = new PBSerializationHandler();
         FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
         try {
-            pbSerializer.serialize(lineSegment, output);
-            System.out.println("-------------- Deserializing JTS Model LineSegment via Protobuf -------------------------");
+            pbSerializer.serialize(triangle, output);
+            System.out.println("-------------- Deserializing JTS Model Triangle via Protobuf -------------------------");
             PBDeserializationHandler pbDeserializationHandler = new PBDeserializationHandler();
-            LineSegment lineSegmentDeserialized = pbDeserializationHandler.deserializeLine(new FileInputStream(Utils.TEST_FILE_LOCATION));
-            assertEquals(lineSegment, lineSegmentDeserialized);
-            System.out.println("Successfully Deserialized : " + lineSegmentDeserialized);
+            Triangle triangleDeserialized = pbDeserializationHandler.deserializeTriangle(new FileInputStream(Utils.TEST_FILE_LOCATION));
+            assertEquals(triangle.p0, triangleDeserialized.p0);
+            assertEquals(triangle.p1, triangleDeserialized.p1);
+            assertEquals(triangle.p2, triangleDeserialized.p2);
+            System.out.println("Successfully Deserialized");
         } finally {
             output.close();
         }
     }
 
     @Test
-    public void testSerializeGeoLineSegmentWithAvro() throws Exception {
-        LineSegment lineSegment = new LineSegment(
-                new Coordinate(0, 0), new Coordinate(1, 0));
-        System.out.println("-------------- Serializing JTS Model LineSegment via Avro-------------------------");
-        AvroSerializationHandler avroSerializationHandler = new AvroSerializationHandler();
+    public void testSerializeGeoTriangleWithAvro() throws Exception {
+        Triangle triangle = new Triangle(new Coordinate(0, 0), new Coordinate(1, 0), new Coordinate(1, 1));
+        System.out.println("-------------- Serializing JTS Model Triangle via Avro -------------------------");
+        AvroSerializationHandler avroSerializer = new AvroSerializationHandler();
         FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
         try {
-            avroSerializationHandler.serialize(lineSegment, output);
+           avroSerializer.serialize(triangle, output);
         } finally {
             output.close();
         }
@@ -100,18 +97,19 @@ public class JTSModellineSegmentTest {
     }
 
     @Test
-    public void testDeserializeGeoLineSegmentWithAvro() throws Exception {
-        LineSegment lineSegment = new LineSegment(
-                new Coordinate(0, 0), new Coordinate(1, 0));
-        AvroSerializationHandler avroSerializationHandler = new AvroSerializationHandler();
+    public void testDeserializeGeoTriangleWithAvro() throws Exception {
+        Triangle triangle = new Triangle(new Coordinate(0, 0), new Coordinate(1, 0), new Coordinate(1, 1));
+        AvroSerializationHandler avroSerializer = new AvroSerializationHandler();
         FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
         try {
-            avroSerializationHandler.serialize(lineSegment, output);
-            System.out.println("-------------- Deserializing JTS Model LineSegment via Avro -------------------------");
+            avroSerializer.serialize(triangle, output);
+            System.out.println("-------------- Deserializing JTS Model Triangle via Avro -------------------------");
             AvroDeserializationHandler avroDeserializationHandler = new AvroDeserializationHandler();
-            LineSegment lineSegmentDeserialized = avroDeserializationHandler.deserializeLine(new FileInputStream(Utils.TEST_FILE_LOCATION));
-            assertEquals(lineSegment, lineSegmentDeserialized);
-            System.out.println("Successfully Deserialized : " + lineSegmentDeserialized);
+            Triangle triangleDeserialized = avroDeserializationHandler.deserializeTriangle(new FileInputStream(Utils.TEST_FILE_LOCATION));
+            assertEquals(triangle.p0, triangleDeserialized.p0);
+            assertEquals(triangle.p1, triangleDeserialized.p1);
+            assertEquals(triangle.p2, triangleDeserialized.p2);
+            System.out.println("Successfully Deserialized");
         } finally {
             output.close();
         }

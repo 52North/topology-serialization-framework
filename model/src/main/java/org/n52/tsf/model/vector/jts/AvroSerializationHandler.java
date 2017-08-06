@@ -17,7 +17,7 @@
 // under the License.
 //
 
-package org.n52.tsf.model.jts;
+package org.n52.tsf.model.vector.jts;
 
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.io.DatumWriter;

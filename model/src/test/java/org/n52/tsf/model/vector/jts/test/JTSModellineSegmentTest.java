@@ -17,18 +17,17 @@
 // under the License.
 //
 
-package org.n52.tsf.model.jts.test;
+package org.n52.tsf.model.vector.jts.test;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.GeometryFactory;
-import org.locationtech.jts.geom.Point;
-import org.n52.tsf.model.jts.AvroDeserializationHandler;
-import org.n52.tsf.model.jts.AvroSerializationHandler;
-import org.n52.tsf.model.jts.PBDeserializationHandler;
-import org.n52.tsf.model.jts.PBSerializationHandler;
+import org.locationtech.jts.geom.LineSegment;
+import org.n52.tsf.model.vector.jts.AvroDeserializationHandler;
+import org.n52.tsf.model.vector.jts.AvroSerializationHandler;
+import org.n52.tsf.model.vector.jts.PBDeserializationHandler;
+import org.n52.tsf.model.vector.jts.PBSerializationHandler;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -40,7 +39,7 @@ import java.nio.file.Paths;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class JTSModelPointTest {
+public class JTSModellineSegmentTest {
 
     @Before
     public void setUp() throws Exception {
@@ -49,15 +48,14 @@ public class JTSModelPointTest {
     }
 
     @Test
-    public void testSerializeGeoPoint() throws Exception {
-        GeometryFactory geometryFactory = new GeometryFactory();
-        Coordinate coordinate = new Coordinate(1,2);
-        Point point = geometryFactory.createPoint(coordinate);
-        System.out.println("-------------- Serializing JTS Model Point via Protobuf -------------------------");
+    public void testSerializeGeoLineSegment() throws Exception {
+        LineSegment lineSegment = new LineSegment(
+                new Coordinate(0, 0), new Coordinate(1, 0));
+        System.out.println("-------------- Serializing JTS Model LineSegment via Protobuf -------------------------");
         PBSerializationHandler pbSerializer = new PBSerializationHandler();
         FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
         try {
-            pbSerializer.serialize(point,output);
+            pbSerializer.serialize(lineSegment, output);
         } finally {
             output.close();
         }
@@ -66,34 +64,32 @@ public class JTSModelPointTest {
     }
 
     @Test
-    public void testDeserializeGeoPoint() throws Exception {
-        GeometryFactory geometryFactory = new GeometryFactory();
-        Coordinate coordinate = new Coordinate(1,2);
-        Point point = geometryFactory.createPoint(coordinate);
+    public void testDeserializeGeoLineSegment() throws Exception {
+        LineSegment lineSegment = new LineSegment(
+                new Coordinate(0, 0), new Coordinate(1, 0));
         PBSerializationHandler pbSerializer = new PBSerializationHandler();
         FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
         try {
-            pbSerializer.serialize(point,output);
-            System.out.println("-------------- Deserializing JTS Model Point via Protobuf ------------------------");
+            pbSerializer.serialize(lineSegment, output);
+            System.out.println("-------------- Deserializing JTS Model LineSegment via Protobuf -------------------------");
             PBDeserializationHandler pbDeserializationHandler = new PBDeserializationHandler();
-            Point pointDeserialized = (Point) pbDeserializationHandler.deserialize(new FileInputStream(Utils.TEST_FILE_LOCATION));
-            assertEquals(point, pointDeserialized);
-            System.out.println("Successfully Deserialized : " + pointDeserialized);
+            LineSegment lineSegmentDeserialized = pbDeserializationHandler.deserializeLine(new FileInputStream(Utils.TEST_FILE_LOCATION));
+            assertEquals(lineSegment, lineSegmentDeserialized);
+            System.out.println("Successfully Deserialized : " + lineSegmentDeserialized);
         } finally {
             output.close();
         }
     }
 
     @Test
-    public void testSerializeGeoPointWithAvro() throws Exception {
-        GeometryFactory geometryFactory = new GeometryFactory();
-        Coordinate coordinate = new Coordinate(1,2);
-        Point point = geometryFactory.createPoint(coordinate);
-        System.out.println("-------------- Serializing JTS Model Point via Avro -------------------------");
-        AvroSerializationHandler avroSerializer = new AvroSerializationHandler();
+    public void testSerializeGeoLineSegmentWithAvro() throws Exception {
+        LineSegment lineSegment = new LineSegment(
+                new Coordinate(0, 0), new Coordinate(1, 0));
+        System.out.println("-------------- Serializing JTS Model LineSegment via Avro-------------------------");
+        AvroSerializationHandler avroSerializationHandler = new AvroSerializationHandler();
         FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
         try {
-            avroSerializer.serialize(point,output);
+            avroSerializationHandler.serialize(lineSegment, output);
         } finally {
             output.close();
         }
@@ -102,19 +98,18 @@ public class JTSModelPointTest {
     }
 
     @Test
-    public void testDeserializeGeoPointWithAvro() throws Exception {
-        GeometryFactory geometryFactory = new GeometryFactory();
-        Coordinate coordinate = new Coordinate(1,2);
-        Point point = geometryFactory.createPoint(coordinate);
-        AvroSerializationHandler avroSerializer = new AvroSerializationHandler();
+    public void testDeserializeGeoLineSegmentWithAvro() throws Exception {
+        LineSegment lineSegment = new LineSegment(
+                new Coordinate(0, 0), new Coordinate(1, 0));
+        AvroSerializationHandler avroSerializationHandler = new AvroSerializationHandler();
         FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
         try {
-            avroSerializer.serialize(point,output);
-            System.out.println("-------------- Deserializing JTS Model Point via Avro ------------------------");
+            avroSerializationHandler.serialize(lineSegment, output);
+            System.out.println("-------------- Deserializing JTS Model LineSegment via Avro -------------------------");
             AvroDeserializationHandler avroDeserializationHandler = new AvroDeserializationHandler();
-            Point pointDeserialized = (Point) avroDeserializationHandler.deserialize(new FileInputStream(Utils.TEST_FILE_LOCATION));
-            assertEquals(point, pointDeserialized);
-            System.out.println("Successfully Deserialized : " + pointDeserialized);
+            LineSegment lineSegmentDeserialized = avroDeserializationHandler.deserializeLine(new FileInputStream(Utils.TEST_FILE_LOCATION));
+            assertEquals(lineSegment, lineSegmentDeserialized);
+            System.out.println("Successfully Deserialized : " + lineSegmentDeserialized);
         } finally {
             output.close();
         }
