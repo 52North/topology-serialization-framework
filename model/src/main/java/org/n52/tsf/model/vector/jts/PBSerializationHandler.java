@@ -49,6 +49,8 @@ public class PBSerializationHandler {
             pbGeometry = serializeMultiLineString((MultiLineString) jtsGeometry);
         }else if (jtsGeometry instanceof MultiPolygon) {
             pbGeometry = serializeMultiPolygon((MultiPolygon) jtsGeometry);
+        }else if (jtsGeometry instanceof GeometryCollection) {
+            pbGeometry = serializeGeometryCollection((GeometryCollection) jtsGeometry);
         } else {
             throw new IllegalArgumentException("Unsupported Geometric type for Protobuf Serialization");
         }
@@ -192,5 +194,31 @@ public class PBSerializationHandler {
         coordinate.setY(jtsCoordinate.y);
         coordinate.setZ(jtsCoordinate.z);
         return coordinate.build();
+    }
+
+    private GeoProtobuf.Geometry serializeGeometryCollection(GeometryCollection jtsGeoCollection) throws IOException {
+        GeoProtobuf.Geometry.Builder geoCollection = GeoProtobuf.Geometry.newBuilder();
+        geoCollection.setType(GeoProtobuf.Geometry.Type.GEOMETRYCOLLECTION);
+        for (int i = 0; i < jtsGeoCollection.getNumGeometries(); i++) {
+            Geometry jtsGeometry = jtsGeoCollection.getGeometryN(i);
+            if (jtsGeometry instanceof Point) {
+                geoCollection.addGeometries(serializePoint((Point) jtsGeometry));
+            }else if (jtsGeometry instanceof LinearRing) {
+                geoCollection.addGeometries(serializeLinearRing((LinearRing) jtsGeometry));
+            } else if (jtsGeometry instanceof LineString) {
+                geoCollection.addGeometries(serializeLineString((LineString) jtsGeometry));
+            } else if (jtsGeometry instanceof Polygon) {
+                geoCollection.addGeometries(serializePolygon((Polygon) jtsGeometry));
+            } else if (jtsGeometry instanceof MultiPoint) {
+                geoCollection.addGeometries(serializeMultiPoint((MultiPoint) jtsGeometry));
+            } else if (jtsGeometry instanceof MultiLineString) {
+                geoCollection.addGeometries(serializeMultiLineString((MultiLineString) jtsGeometry));
+            }else if (jtsGeometry instanceof MultiPolygon) {
+                geoCollection.addGeometries(serializeMultiPolygon((MultiPolygon) jtsGeometry));
+            } else {
+                throw new IllegalArgumentException("Unsupported Geometric type for Protobuf Serialization");
+            }
+        }
+        return geoCollection.build();
     }
 }

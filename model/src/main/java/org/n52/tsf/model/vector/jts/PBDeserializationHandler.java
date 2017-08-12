@@ -65,6 +65,9 @@ public class PBDeserializationHandler {
             case MULTIPOLYGON:
                 jtsGeometry = deserializeMultiPolygon(pbGeometry);
                 break;
+            case GEOMETRYCOLLECTION:
+                jtsGeometry = deserializeGeoCollection(pbGeometry);
+                break;
             default:
                 logger.error("Unsupported Geometric type for Protobuf deserialization");
         }
@@ -159,5 +162,33 @@ public class PBDeserializationHandler {
     private Coordinate createJtsCoordinate(GeoProtobuf.Coordinate pbCoordinate) {
         Coordinate jtsCoordinate = new Coordinate(pbCoordinate.getX(), pbCoordinate.getY());
         return jtsCoordinate;
+    }
+
+    private GeometryCollection deserializeGeoCollection(GeoProtobuf.Geometry pbGeometry) {
+        Geometry[] jtsGeometries = pbGeometry.getGeometriesList().
+                stream().map(this::deserializeGeometry).collect(Collectors.toList()).stream().toArray(Geometry[]::new);
+        return geometryFactory.createGeometryCollection(jtsGeometries);
+    }
+
+    private Geometry deserializeGeometry(GeoProtobuf.Geometry pbGeometry) {
+        switch (pbGeometry.getType()) {
+            case POINT:
+                return deserializePoint(pbGeometry);
+            case LINESTRING:
+                return deserializeLineString(pbGeometry);
+            case POLYGON:
+                return deserializePolygon(pbGeometry);
+            case MULTIPOINT:
+                return deserializeMultiPoint(pbGeometry);
+            case MULTILINESTRING:
+                return deserializeMultiLineString(pbGeometry);
+            case LINEARRING:
+                return deserializeLinearRing(pbGeometry);
+            case MULTIPOLYGON:
+                return deserializeMultiPolygon(pbGeometry);
+            default:
+                logger.error("Unsupported Geometric type for Protobuf deserialization");
+                return null;
+        }
     }
 }

@@ -43,5 +43,7 @@ message Geometry {
         LINE = 6;
         TRIANGLE = 7;
         LINEARRING = 8;
+        GEOMETRYCOLLECTION = 9;
     }
 }
+
