@@ -56,6 +56,8 @@ public class AvroSerializationHandler {
             avroGeometry = serializeMultiLineString((MultiLineString) jtsGeometry);
         } else if (jtsGeometry instanceof MultiPolygon) {
             avroGeometry = serializeMultiPolygon((MultiPolygon) jtsGeometry);
+        }else if (jtsGeometry instanceof GeometryCollection) {
+                avroGeometry = serializeGeometryCollection((GeometryCollection) jtsGeometry);
         } else {
             throw new IllegalArgumentException("Unsupported Geometric type for Avro Serialization");
         }
@@ -221,5 +223,30 @@ public class AvroSerializationHandler {
 
         geometry.setType(type);
         return geometry.build();
+    }
+
+    private org.n52.tsf.serialization.avro.gen.vector.Geometry serializeGeometryCollection(GeometryCollection jtsGeoCollection) throws IOException {
+        List<org.n52.tsf.serialization.avro.gen.vector.Geometry> geometries = new ArrayList<>();
+        for (int i = 0; i < jtsGeoCollection.getNumGeometries(); i++) {
+            Geometry jtsGeometry = jtsGeoCollection.getGeometryN(i);
+            if (jtsGeometry instanceof Point) {
+                geometries.add(serializePoint((Point) jtsGeometry));
+            }else if (jtsGeometry instanceof LinearRing) {
+                geometries.add(serializeLinearRing((LinearRing) jtsGeometry));
+            } else if (jtsGeometry instanceof LineString) {
+                geometries.add(serializeLineString((LineString) jtsGeometry));
+            } else if (jtsGeometry instanceof Polygon) {
+                geometries.add(serializePolygon((Polygon) jtsGeometry));
+            } else if (jtsGeometry instanceof MultiPoint) {
+                geometries.add(serializeMultiPoint((MultiPoint) jtsGeometry));
+            } else if (jtsGeometry instanceof MultiLineString) {
+                geometries.add(serializeMultiLineString((MultiLineString) jtsGeometry));
+            }else if (jtsGeometry instanceof MultiPolygon) {
+                geometries.add(serializeMultiPolygon((MultiPolygon) jtsGeometry));
+            } else {
+                throw new IllegalArgumentException("Unsupported Geometric type for Avro Serialization");
+            }
+        }
+        return createGeometry(null, geometries, org.n52.tsf.serialization.avro.gen.vector.Type.GEOMETRYCOLLECTION);
     }
 }

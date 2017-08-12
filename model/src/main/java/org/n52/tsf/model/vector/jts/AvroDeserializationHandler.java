@@ -55,6 +55,9 @@ public class AvroDeserializationHandler {
             case MULTIPOLYGON:
                 jtsGeometry = deserializeMultiPolygon(avroGeometry);
                 break;
+            case GEOMETRYCOLLECTION:
+                jtsGeometry = deserializeGeoCollection(avroGeometry);
+                break;
             default:
                 logger.error("Unsupported Geometric type for Avro deserialization");
         }
@@ -162,4 +165,31 @@ public class AvroDeserializationHandler {
     }
 
 
+    private GeometryCollection deserializeGeoCollection(org.n52.tsf.serialization.avro.gen.vector.Geometry avroGeometry) {
+        Geometry[] jtsGeometries = avroGeometry.getGeometries().
+                stream().map(this::deserializeGeometry).collect(Collectors.toList()).stream().toArray(Geometry[]::new);
+        return geometryFactory.createGeometryCollection(jtsGeometries);
+    }
+
+    private Geometry deserializeGeometry(org.n52.tsf.serialization.avro.gen.vector.Geometry avroGeometry) {
+        switch (avroGeometry.getType()) {
+            case POINT:
+                return deserializePoint(avroGeometry);
+            case LINESTRING:
+                return deserializeLineString(avroGeometry);
+            case POLYGON:
+                return deserializePolygon(avroGeometry);
+            case MULTIPOINT:
+                return deserializeMultiPoint(avroGeometry);
+            case MULTILINESTRING:
+                return deserializeMultiLineString(avroGeometry);
+            case LINEARRING:
+                return deserializeLinearRing(avroGeometry);
+            case MULTIPOLYGON:
+                return deserializeMultiPolygon(avroGeometry);
+            default:
+                logger.error("Unsupported Geometric type for Avro deserialization");
+                return null;
+        }
+    }
 }
