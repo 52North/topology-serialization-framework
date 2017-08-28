@@ -37,6 +37,16 @@
             <artifactId>commons-cli</artifactId>
             <version>1.4</version>
         </dependency>
+        <dependency>
+            <groupId>org.geotools</groupId>
+            <artifactId>gt-geojson</artifactId>
+            <version>15.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.vividsolutions</groupId>
+            <artifactId>jts-core</artifactId>
+            <version>1.14.0</version>
+        </dependency>
     </dependencies>
 
     <repositories>
@@ -55,4 +65,23 @@
         </repository>
     </repositories>
 
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <configuration>
+                        <archive>
+                            <manifest>
+                                <mainClass>org.n52.tsf.samples.benchmark.VectorDataBenchMark</mainClass>
+                            </manifest>
+                        </archive>
+                        <descriptorRefs>
+                            <descriptorRef>jar-with-dependencies</descriptorRef>
+                        </descriptorRefs>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
 </project>
