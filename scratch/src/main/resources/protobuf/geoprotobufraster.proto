@@ -19,31 +19,27 @@
 
 syntax = "proto3";
 
-option java_package = "org.n52.tsf.serialization.protobuf.gen";
-option java_outer_classname = "GeoProtobuf";
+option java_package = "org.n52.tsf.serialization.protobuf.test.gen";
+option java_outer_classname = "GeoProtobufRaster";
 
-message Coordinate {
-    double x = 1;
-    double y = 2;
-    double z = 3;
+message Grid {
+    double xulc = 1;
+    double yulc = 2;
+    double x_pixel_size = 3;
+    double y_pixel_size  = 4;
+    double x_rotation = 5;
+    double y_rotation = 6;
+    int32 max_width = 7;
+    int32 max_hight = 8;
 }
 
-message Geometry {
-    Type type = 1;
-    repeated Coordinate coordinates = 2;
-    repeated Geometry geometries = 3;
-
-    enum Type {
-        POINT = 0;
-        LINESTRING = 1;
-        POLYGON = 2;
-        MULTIPOINT = 3;
-        MULTILINESTRING = 4;
-        MULTIPOLYGON = 5;
-        LINE = 6;
-        TRIANGLE = 7;
-        LINEARRING = 8;
-        GEOMETRYCOLLECTION = 9;
-    }
+message GridWithCRS {
+    repeated GridPoint gridPoints = 1;
 }
+
+message GridPoint {
+    double longitude = 1;
+    double latitude = 2;
+}
+
 

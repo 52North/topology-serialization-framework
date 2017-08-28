@@ -18,7 +18,7 @@
 //
 
 [
-{"namespace": "org.n52.tsf.serialization.avro.gen",
+{"namespace": "org.n52.tsf.serialization.avro.gen.vector",
  "type": "record",
  "name": "Coordinate",
  "fields": [
@@ -27,12 +27,12 @@
      {"name": "z", "type": "double"}
  ]
 },
-{"namespace": "org.n52.tsf.serialization.avro.gen",
+{"namespace": "org.n52.tsf.serialization.avro.gen.vector",
  "type": "enum",
  "name": "Type",
- "symbols" : ["POINT", "LINESTRING", "POLYGON", "LINEARRING"]
+ "symbols" : ["POINT", "LINESTRING", "POLYGON", "LINEARRING", "MULTIPOINT", "MULTILINESTRING", "MULTIPOLYGON", "LINE", "TRIANGLE", "GEOMETRYCOLLECTION"]
 },
-{"namespace": "org.n52.tsf.serialization.avro.gen",
+{"namespace": "org.n52.tsf.serialization.avro.gen.vector",
  "type": "record",
  "name": "Geometry",
  "fields": [

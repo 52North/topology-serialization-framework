@@ -17,33 +17,21 @@
 // under the License.
 //
 
-syntax = "proto3";
+package org.n52.tsf.model;
 
-option java_package = "org.n52.tsf.serialization.protobuf.gen";
-option java_outer_classname = "GeoProtobuf";
+import java.io.IOException;
 
-message Coordinate {
-    double x = 1;
-    double y = 2;
-    double z = 3;
-}
+public abstract class SerializationHandler {
+    private SerializerType serializerType =  null;
 
-message Geometry {
-    Type type = 1;
-    repeated Coordinate coordinates = 2;
-    repeated Geometry geometries = 3;
-
-    enum Type {
-        POINT = 0;
-        LINESTRING = 1;
-        POLYGON = 2;
-        MULTIPOINT = 3;
-        MULTILINESTRING = 4;
-        MULTIPOLYGON = 5;
-        LINE = 6;
-        TRIANGLE = 7;
-        LINEARRING = 8;
-        GEOMETRYCOLLECTION = 9;
+    public SerializationHandler(SerializerType serializerType) {
+        this.serializerType = serializerType;
     }
-}
 
+    public SerializerType getSerializerType() {
+        return serializerType;
+    }
+
+    public abstract void serialize(Object jtsGeometry) throws IOException;
+    public abstract void close() throws IOException;
+}

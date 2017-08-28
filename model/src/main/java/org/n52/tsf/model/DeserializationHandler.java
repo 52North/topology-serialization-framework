@@ -17,33 +17,22 @@
 // under the License.
 //
 
-syntax = "proto3";
+package org.n52.tsf.model;
 
-option java_package = "org.n52.tsf.serialization.protobuf.gen";
-option java_outer_classname = "GeoProtobuf";
 
-message Coordinate {
-    double x = 1;
-    double y = 2;
-    double z = 3;
-}
+import java.io.IOException;
 
-message Geometry {
-    Type type = 1;
-    repeated Coordinate coordinates = 2;
-    repeated Geometry geometries = 3;
+public abstract class DeserializationHandler {
+    private DeserializerType deserializerType =  null;
 
-    enum Type {
-        POINT = 0;
-        LINESTRING = 1;
-        POLYGON = 2;
-        MULTIPOINT = 3;
-        MULTILINESTRING = 4;
-        MULTIPOLYGON = 5;
-        LINE = 6;
-        TRIANGLE = 7;
-        LINEARRING = 8;
-        GEOMETRYCOLLECTION = 9;
+    public DeserializationHandler(DeserializerType deserializerType) {
+        this.deserializerType = deserializerType;
     }
-}
 
+    public DeserializerType getDeserializerType() {
+        return deserializerType;
+    }
+
+    public abstract Object deserialize() throws IOException;
+    public abstract void close() throws IOException;
+}

@@ -1,0 +1,9 @@
+{"namespace": "org.n52.tsf.serialization.avro.test.gen",
+ "type": "record",
+ "name": "Coordinate",
+ "fields": [
+     {"name": "x", "type": "double"},
+     {"name": "y", "type": "double"},
+     {"name": "z", "type": "double"}
+ ]
+}
