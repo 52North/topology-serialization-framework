@@ -21,6 +21,8 @@ package org.n52.tsf.model.vector.jts.vividsolutions;
 
 import org.apache.log4j.Logger;
 import com.vividsolutions.jts.geom.*;
+import org.n52.tsf.model.SerializationHandler;
+import org.n52.tsf.model.SerializerType;
 import org.n52.tsf.serialization.protobuf.gen.GeoProtobuf;
 
 import java.io.IOException;
@@ -29,11 +31,16 @@ import java.io.OutputStream;
 /**
  * This class provides the JTS to ProtoBuf Serialization functionality with vividsolutions JTS library.
  */
-public class PBSerializationHandler {
-    final static Logger logger = Logger.getLogger(PBSerializationHandler.class);
+public class PBSerializationHandlerVS extends SerializationHandler {
+    final static Logger logger = Logger.getLogger(PBSerializationHandlerVS.class);
+    private OutputStream output;
 
+    public PBSerializationHandlerVS(OutputStream outputStream) {
+        super(SerializerType.PROTOBUF_SERIALIZER_VS);
+        output = outputStream;
+    }
 
-    public void serialize(Geometry jtsGeometry, OutputStream outputStream) throws IOException {
+    public void serialize(Object jtsGeometry) throws IOException {
         GeoProtobuf.Geometry pbGeometry;
         if (jtsGeometry instanceof Point) {
             pbGeometry = serializePoint((Point) jtsGeometry);
@@ -49,22 +56,20 @@ public class PBSerializationHandler {
             pbGeometry = serializeMultiLineString((MultiLineString) jtsGeometry);
         }else if (jtsGeometry instanceof MultiPolygon) {
             pbGeometry = serializeMultiPolygon((MultiPolygon) jtsGeometry);
+        }else if (jtsGeometry instanceof LineSegment) {
+            pbGeometry = serializeLine((LineSegment) jtsGeometry);
+        }else if (jtsGeometry instanceof Triangle) {
+            pbGeometry = serializeTriangle((Triangle) jtsGeometry);
         }else if (jtsGeometry instanceof GeometryCollection) {
             pbGeometry = serializeGeometryCollection((GeometryCollection) jtsGeometry);
         } else {
             throw new IllegalArgumentException("Unsupported Geometric type for Protobuf Serialization");
         }
-        pbGeometry.writeTo(outputStream);
+        pbGeometry.writeDelimitedTo(output);
     }
 
-    public void serialize(LineSegment jtsLine, OutputStream outputStream) throws IOException {
-        GeoProtobuf.Geometry pbGeometry =  serializeLine(jtsLine);
-        pbGeometry.writeTo(outputStream);
-    }
-
-    public void serialize(Triangle jtsTriangle, OutputStream outputStream) throws IOException {
-        GeoProtobuf.Geometry pbGeometry =  serializeTriangle(jtsTriangle);
-        pbGeometry.writeTo(outputStream);
+    public void close() throws IOException {
+        output.close();
     }
 
     private GeoProtobuf.Geometry serializePoint(Point jtsPoint) throws IOException {

@@ -25,10 +25,7 @@ import org.junit.Test;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.MultiPoint;
-import org.n52.tsf.model.vector.jts.AvroDeserializationHandler;
-import org.n52.tsf.model.vector.jts.AvroSerializationHandler;
-import org.n52.tsf.model.vector.jts.PBDeserializationHandler;
-import org.n52.tsf.model.vector.jts.PBSerializationHandler;
+import org.n52.tsf.model.*;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -48,75 +45,38 @@ public class JTSModelMultipointTest {
     }
 
     @Test
-    public void testSerializeGeoMultiPoint() throws Exception {
+    public void testMultiGeoPointWithProtobuf() throws Exception {
         GeometryFactory geometryFactory = new GeometryFactory();
         MultiPoint multiPoint = geometryFactory.createMultiPoint(new Coordinate[]{
                 new Coordinate(0, 0), new Coordinate(1, 0), new Coordinate(1, 1)});
-        System.out.println("-------------- Serializing JTS Model MultiPoint via Protobuf -------------------------");
-        PBSerializationHandler pbSerializer = new PBSerializationHandler();
-        FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
-        try {
-            pbSerializer.serialize(multiPoint, output);
-        } finally {
-            output.close();
-        }
+        System.out.println("-------------- Deserializing JTS Model MultiPoint via Protobuf -------------------------");
+        SerializationHandler pbSerializer = SerializationFactory.createSerializer(new FileOutputStream(Utils.TEST_FILE_LOCATION), SerializerType.PROTOBUF_SERIALIZER_LT);
+        pbSerializer.serialize(multiPoint);
+        pbSerializer.close();
         assertTrue(new File(Utils.TEST_FILE_LOCATION).length() > 0);
-        System.out.println("Successfully Serialized....");
+        System.out.println("-------------- Deserializing JTS Model MultiPoint via Protobuf -------------------------");
+        DeserializationHandler pbDeserializationHandler = DeserializationFactory.createDeserializer(new FileInputStream(Utils.TEST_FILE_LOCATION), DeserializerType.PROTOBUF_DESERIALIZER_LT);
+        MultiPoint multiPointDeserialized = (MultiPoint) pbDeserializationHandler.deserialize();
+        assertEquals(multiPoint, multiPointDeserialized);
+        System.out.println("Successfully Deserialized : " + multiPointDeserialized);
     }
 
     @Test
-    public void testDeserializeMultiGeoPoint() throws Exception {
+    public void testMultiGeoPointWithAvro() throws Exception {
         GeometryFactory geometryFactory = new GeometryFactory();
         MultiPoint multiPoint = geometryFactory.createMultiPoint(new Coordinate[]{
                 new Coordinate(0, 0), new Coordinate(1, 0), new Coordinate(1, 1)});
-        PBSerializationHandler pbSerializer = new PBSerializationHandler();
-        FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
-        try {
-            pbSerializer.serialize(multiPoint, output);
-            System.out.println("-------------- Deserializing JTS Model MultiPoint via Protobuf -------------------------");
-            PBDeserializationHandler pbDeserializationHandler = new PBDeserializationHandler();
-            MultiPoint multiPointDeserialized = (MultiPoint) pbDeserializationHandler.deserialize(new FileInputStream(Utils.TEST_FILE_LOCATION));
-            assertEquals(multiPoint, multiPointDeserialized);
-            System.out.println("Successfully Deserialized : " + multiPointDeserialized);
-        } finally {
-            output.close();
-        }
-    }
-
-    @Test
-    public void testSerializeGeoMultiPointWithAvro() throws Exception {
-        GeometryFactory geometryFactory = new GeometryFactory();
-        MultiPoint multiPoint = geometryFactory.createMultiPoint(new Coordinate[]{
-                new Coordinate(0, 0), new Coordinate(1, 0), new Coordinate(1, 1)});
-        System.out.println("-------------- Serializing JTS Model MultiPoint via Avro -------------------------");
-        AvroSerializationHandler avroSerializer = new AvroSerializationHandler();
-        FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
-        try {
-            avroSerializer.serialize(multiPoint, output);
-        } finally {
-            output.close();
-        }
+        System.out.println("-------------- Deserializing JTS Model MultiPoint via Avro -------------------------");
+        SerializationHandler avroSerializer = SerializationFactory.createSerializer(new FileOutputStream(Utils.TEST_FILE_LOCATION), SerializerType.AVRO_SERIALIZER_LT);
+        avroSerializer.serialize(multiPoint);
+        avroSerializer.close();
         assertTrue(new File(Utils.TEST_FILE_LOCATION).length() > 0);
-        System.out.println("Successfully Serialized....");
-    }
-
-    @Test
-    public void testDeserializeMultiGeoPointWithAvro() throws Exception {
-        GeometryFactory geometryFactory = new GeometryFactory();
-        MultiPoint multiPoint = geometryFactory.createMultiPoint(new Coordinate[]{
-                new Coordinate(0, 0), new Coordinate(1, 0), new Coordinate(1, 1)});
-        AvroSerializationHandler avroSerializer = new AvroSerializationHandler();
-        FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
-        try {
-            avroSerializer.serialize(multiPoint, output);
-            System.out.println("-------------- Deserializing JTS Model MultiPoint via Avro -------------------------");
-            AvroDeserializationHandler avroDeserializationHandler = new AvroDeserializationHandler();
-            MultiPoint multiPointDeserialized = (MultiPoint) avroDeserializationHandler.deserialize(new FileInputStream(Utils.TEST_FILE_LOCATION));
-            assertEquals(multiPoint, multiPointDeserialized);
-            System.out.println("Successfully Deserialized : " + multiPointDeserialized);
-        } finally {
-            output.close();
-        }
+        System.out.println("-------------- Deserializing JTS Model MultiPoint via Avro -------------------------");
+        DeserializationHandler avroDeserializationHandler = DeserializationFactory.createDeserializer(new FileInputStream(Utils.TEST_FILE_LOCATION), DeserializerType.AVRO_DESERIALIZER_LT);
+        MultiPoint multiPointDeserialized = (MultiPoint) avroDeserializationHandler.deserialize();
+        avroDeserializationHandler.close();
+        assertEquals(multiPoint, multiPointDeserialized);
+        System.out.println("Successfully Deserialized : " + multiPointDeserialized);
     }
 
     @After

@@ -17,10 +17,12 @@
 // under the License.
 //
 
-package org.n52.tsf.model.vector.jts;
+package org.n52.tsf.model.vector.jts.vividsolutions;
 
 import org.apache.log4j.Logger;
-import org.locationtech.jts.geom.*;
+import com.vividsolutions.jts.geom.*;
+import org.n52.tsf.model.DeserializationHandler;
+import org.n52.tsf.model.DeserializerType;
 import org.n52.tsf.serialization.protobuf.gen.GeoProtobuf;
 
 import java.io.IOException;
@@ -32,17 +34,22 @@ import java.util.stream.Collectors;
 /**
  * This class provides the JTS to ProtoBuf Deserialization functionality.
  */
-public class PBDeserializationHandler {
-    final static Logger logger = Logger.getLogger(PBDeserializationHandler.class);
-    GeometryFactory geometryFactory;
+public class PBDeserializationHandlerVS extends DeserializationHandler{
+    private final static Logger logger = Logger.getLogger(PBDeserializationHandlerVS.class);
+    private GeometryFactory geometryFactory;
+    private InputStream inputStream;
 
-    public PBDeserializationHandler() {
+
+    public PBDeserializationHandlerVS(InputStream inputStream) {
+        super(DeserializerType.PROTOBUF_DESERIALIZER_VS);
         this.geometryFactory = new GeometryFactory();
+        this.inputStream = inputStream;
+
     }
 
-    public Geometry deserialize(InputStream inputStream) throws IOException {
-        GeoProtobuf.Geometry pbGeometry = GeoProtobuf.Geometry.parseFrom(inputStream);
-        Geometry jtsGeometry = null;
+    public Object deserialize() throws IOException {
+        GeoProtobuf.Geometry pbGeometry = GeoProtobuf.Geometry.parseDelimitedFrom(inputStream);
+        Object jtsGeometry = null;
         switch (pbGeometry.getType()) {
             case POINT:
                 jtsGeometry = deserializePoint(pbGeometry);
@@ -68,10 +75,20 @@ public class PBDeserializationHandler {
             case GEOMETRYCOLLECTION:
                 jtsGeometry = deserializeGeoCollection(pbGeometry);
                 break;
+            case TRIANGLE:
+                jtsGeometry = deserializeTriangle(pbGeometry);
+                break;
+            case LINE:
+                jtsGeometry = deserializeLine(pbGeometry);
+                break;
             default:
                 logger.error("Unsupported Geometric type for Protobuf deserialization");
         }
         return jtsGeometry;
+    }
+
+    public void close() throws IOException {
+      inputStream.close();
     }
 
     private Point deserializePoint(GeoProtobuf.Geometry pbGeometry) {
@@ -94,16 +111,14 @@ public class PBDeserializationHandler {
         return lineString;
     }
 
-    public LineSegment deserializeLine(InputStream inputStream) throws IOException {
-        GeoProtobuf.Geometry pbGeometry = GeoProtobuf.Geometry.parseFrom(inputStream);
+    public LineSegment deserializeLine(GeoProtobuf.Geometry pbGeometry) throws IOException {
         Coordinate[] jtsCoordinates = pbGeometry.getCoordinatesList().
                 stream().map(this::createJtsCoordinate).collect(Collectors.toList()).stream().toArray(Coordinate[]::new);
         LineSegment lineSegment = new LineSegment(jtsCoordinates[0], jtsCoordinates[1]);
         return lineSegment;
     }
 
-    public Triangle deserializeTriangle(InputStream inputStream) throws IOException {
-        GeoProtobuf.Geometry pbGeometry = GeoProtobuf.Geometry.parseFrom(inputStream);
+    public Triangle deserializeTriangle(GeoProtobuf.Geometry pbGeometry) throws IOException {
         Coordinate[] jtsCoordinates = pbGeometry.getCoordinatesList().
                 stream().map(this::createJtsCoordinate).collect(Collectors.toList()).stream().toArray(Coordinate[]::new);
         Triangle triangle = new Triangle(jtsCoordinates[0], jtsCoordinates[1], jtsCoordinates[2]);

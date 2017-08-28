@@ -25,10 +25,7 @@ import org.junit.Test;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
-import org.n52.tsf.model.vector.jts.AvroDeserializationHandler;
-import org.n52.tsf.model.vector.jts.AvroSerializationHandler;
-import org.n52.tsf.model.vector.jts.PBDeserializationHandler;
-import org.n52.tsf.model.vector.jts.PBSerializationHandler;
+import org.n52.tsf.model.*;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -49,56 +46,20 @@ public class JTSModelPointTest {
     }
 
     @Test
-    public void testSerializeGeoPoint() throws Exception {
+    public void testGeoPointWithProtobuf() throws Exception {
         GeometryFactory geometryFactory = new GeometryFactory();
         Coordinate coordinate = new Coordinate(1,2);
         Point point = geometryFactory.createPoint(coordinate);
-        System.out.println("-------------- Serializing JTS Model Point via Protobuf -------------------------");
-        PBSerializationHandler pbSerializer = new PBSerializationHandler();
-        FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
-        try {
-            pbSerializer.serialize(point,output);
-        } finally {
-            output.close();
-        }
+        System.out.println("-------------- Serializing JTS Model Point via Protobuf ------------------------");
+        SerializationHandler pbSerializer = SerializationFactory.createSerializer(new FileOutputStream(Utils.TEST_FILE_LOCATION), SerializerType.PROTOBUF_SERIALIZER_LT);
+        pbSerializer.serialize(point);
+        pbSerializer.close();
         assertTrue(new File(Utils.TEST_FILE_LOCATION).length() > 0);
-        System.out.println("Successfully Serialized....");
-    }
-
-    @Test
-    public void testDeserializeGeoPoint() throws Exception {
-        GeometryFactory geometryFactory = new GeometryFactory();
-        Coordinate coordinate = new Coordinate(1,2);
-        Point point = geometryFactory.createPoint(coordinate);
-        PBSerializationHandler pbSerializer = new PBSerializationHandler();
-        FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
-        try {
-            pbSerializer.serialize(point,output);
-            System.out.println("-------------- Deserializing JTS Model Point via Protobuf ------------------------");
-            PBDeserializationHandler pbDeserializationHandler = new PBDeserializationHandler();
-            Point pointDeserialized = (Point) pbDeserializationHandler.deserialize(new FileInputStream(Utils.TEST_FILE_LOCATION));
-            assertEquals(point, pointDeserialized);
-            System.out.println("Successfully Deserialized : " + pointDeserialized);
-        } finally {
-            output.close();
-        }
-    }
-
-    @Test
-    public void testSerializeGeoPointWithAvro() throws Exception {
-        GeometryFactory geometryFactory = new GeometryFactory();
-        Coordinate coordinate = new Coordinate(1,2);
-        Point point = geometryFactory.createPoint(coordinate);
-        System.out.println("-------------- Serializing JTS Model Point via Avro -------------------------");
-        AvroSerializationHandler avroSerializer = new AvroSerializationHandler();
-        FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
-        try {
-            avroSerializer.serialize(point,output);
-        } finally {
-            output.close();
-        }
-        assertTrue(new File(Utils.TEST_FILE_LOCATION).length() > 0);
-        System.out.println("Successfully Serialized....");
+        System.out.println("-------------- Deserializing JTS Model Point via Protobuf ------------------------");
+        DeserializationHandler pbDeserializationHandler = DeserializationFactory.createDeserializer(new FileInputStream(Utils.TEST_FILE_LOCATION), DeserializerType.PROTOBUF_DESERIALIZER_LT);
+        Point pointDeserialized = (Point) pbDeserializationHandler.deserialize();
+        assertEquals(point, pointDeserialized);
+        System.out.println("Successfully Deserialized : " + pointDeserialized);
     }
 
     @Test
@@ -106,18 +67,16 @@ public class JTSModelPointTest {
         GeometryFactory geometryFactory = new GeometryFactory();
         Coordinate coordinate = new Coordinate(1,2);
         Point point = geometryFactory.createPoint(coordinate);
-        AvroSerializationHandler avroSerializer = new AvroSerializationHandler();
-        FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
-        try {
-            avroSerializer.serialize(point,output);
-            System.out.println("-------------- Deserializing JTS Model Point via Avro ------------------------");
-            AvroDeserializationHandler avroDeserializationHandler = new AvroDeserializationHandler();
-            Point pointDeserialized = (Point) avroDeserializationHandler.deserialize(new FileInputStream(Utils.TEST_FILE_LOCATION));
-            assertEquals(point, pointDeserialized);
-            System.out.println("Successfully Deserialized : " + pointDeserialized);
-        } finally {
-            output.close();
-        }
+        System.out.println("-------------- Serializing JTS Model Point via Avro ------------------------");
+        SerializationHandler avroSerializer = SerializationFactory.createSerializer(new FileOutputStream(Utils.TEST_FILE_LOCATION), SerializerType.AVRO_SERIALIZER_LT);
+        avroSerializer.serialize(point);
+        avroSerializer.close();
+        assertTrue(new File(Utils.TEST_FILE_LOCATION).length() > 0);
+        System.out.println("-------------- Deserializing JTS Model Point via Avro ------------------------");
+        DeserializationHandler avroDeserializationHandler = DeserializationFactory.createDeserializer(new FileInputStream(Utils.TEST_FILE_LOCATION), DeserializerType.AVRO_DESERIALIZER_LT);
+        Point pointDeserialized = (Point) avroDeserializationHandler.deserialize();
+        assertEquals(point, pointDeserialized);
+        System.out.println("Successfully Deserialized : " + pointDeserialized);
     }
 
     @After

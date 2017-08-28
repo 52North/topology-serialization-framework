@@ -19,11 +19,13 @@
 
 package org.n52.tsf.model.vector.jts.vividsolutions;
 
+import com.vividsolutions.jts.geom.*;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.log4j.Logger;
-import com.vividsolutions.jts.geom.*;
+import org.n52.tsf.model.SerializationHandler;
+import org.n52.tsf.model.SerializerType;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -35,10 +37,18 @@ import static java.lang.Double.NaN;
 /**
  * This class provides the JTS to avro Serialization functionality with vividsolutions JTS library.
  */
-public class AvroSerializationHandler {
-    final static Logger logger = Logger.getLogger(AvroSerializationHandler.class);
+public class AvroSerializationHandlerVS extends SerializationHandler{
+    final static Logger logger = Logger.getLogger(AvroSerializationHandlerVS.class);
+    private DataFileWriter<org.n52.tsf.serialization.avro.gen.vector.Geometry> dataFileWriter;
 
-    public void serialize(Geometry jtsGeometry, OutputStream outputStream) throws IOException {
+    public AvroSerializationHandlerVS(OutputStream outputStream) throws IOException {
+        super(SerializerType.AVRO_SERIALIZER_VS);
+        DatumWriter<org.n52.tsf.serialization.avro.gen.vector.Geometry> datumWriter = new SpecificDatumWriter<>(org.n52.tsf.serialization.avro.gen.vector.Geometry.class);
+        dataFileWriter = new DataFileWriter<>(datumWriter);
+        dataFileWriter.create(org.n52.tsf.serialization.avro.gen.vector.Geometry.getClassSchema(), outputStream);
+    }
+
+    public void serialize(Object jtsGeometry) throws IOException {
         org.n52.tsf.serialization.avro.gen.vector.Geometry avroGeometry;
         if (jtsGeometry instanceof Point) {
             avroGeometry = serializePoint((Point) jtsGeometry);
@@ -54,34 +64,19 @@ public class AvroSerializationHandler {
             avroGeometry = serializeMultiLineString((MultiLineString) jtsGeometry);
         } else if (jtsGeometry instanceof MultiPolygon) {
             avroGeometry = serializeMultiPolygon((MultiPolygon) jtsGeometry);
+        } else if (jtsGeometry instanceof LineSegment) {
+            avroGeometry = serializeLine((LineSegment) jtsGeometry);
+        } else if (jtsGeometry instanceof Triangle) {
+            avroGeometry = serializeTriangle((Triangle) jtsGeometry);
         }else if (jtsGeometry instanceof GeometryCollection) {
-                avroGeometry = serializeGeometryCollection((GeometryCollection) jtsGeometry);
+            avroGeometry = serializeGeometryCollection((GeometryCollection) jtsGeometry);
         } else {
             throw new IllegalArgumentException("Unsupported Geometric type for Avro Serialization");
         }
-
-        DatumWriter<org.n52.tsf.serialization.avro.gen.vector.Geometry> datumWriter = new SpecificDatumWriter<>(org.n52.tsf.serialization.avro.gen.vector.Geometry.class);
-        DataFileWriter<org.n52.tsf.serialization.avro.gen.vector.Geometry> dataFileWriter = new DataFileWriter<>(datumWriter);
-        dataFileWriter.create(avroGeometry.getSchema(), outputStream);
         dataFileWriter.append(avroGeometry);
-        dataFileWriter.close();
     }
 
-    public void serialize(LineSegment jtsLine, OutputStream outputStream) throws IOException {
-        org.n52.tsf.serialization.avro.gen.vector.Geometry avroGeometry = serializeLine(jtsLine);
-        DatumWriter<org.n52.tsf.serialization.avro.gen.vector.Geometry> datumWriter = new SpecificDatumWriter<>(org.n52.tsf.serialization.avro.gen.vector.Geometry.class);
-        DataFileWriter<org.n52.tsf.serialization.avro.gen.vector.Geometry> dataFileWriter = new DataFileWriter<>(datumWriter);
-        dataFileWriter.create(avroGeometry.getSchema(), outputStream);
-        dataFileWriter.append(avroGeometry);
-        dataFileWriter.close();
-    }
-
-    public void serialize(Triangle jtsTriangle, OutputStream outputStream) throws IOException {
-        org.n52.tsf.serialization.avro.gen.vector.Geometry avroGeometry = serializeTriangle(jtsTriangle);
-        DatumWriter<org.n52.tsf.serialization.avro.gen.vector.Geometry> datumWriter = new SpecificDatumWriter<>(org.n52.tsf.serialization.avro.gen.vector.Geometry.class);
-        DataFileWriter<org.n52.tsf.serialization.avro.gen.vector.Geometry> dataFileWriter = new DataFileWriter<>(datumWriter);
-        dataFileWriter.create(avroGeometry.getSchema(), outputStream);
-        dataFileWriter.append(avroGeometry);
+    public void close() throws IOException {
         dataFileWriter.close();
     }
 
@@ -202,8 +197,8 @@ public class AvroSerializationHandler {
     }
 
     private org.n52.tsf.serialization.avro.gen.vector.Geometry createGeometry(List<org.n52.tsf.serialization.avro.gen.vector.Coordinate> coordinates,
-                                                                       List<org.n52.tsf.serialization.avro.gen.vector.Geometry> geometries,
-                                                                       org.n52.tsf.serialization.avro.gen.vector.Type type) {
+                                                                              List<org.n52.tsf.serialization.avro.gen.vector.Geometry> geometries,
+                                                                              org.n52.tsf.serialization.avro.gen.vector.Type type) {
         org.n52.tsf.serialization.avro.gen.vector.Geometry.Builder geometry = org.n52.tsf.serialization.avro.gen.
                 vector.Geometry.newBuilder();
         if (coordinates == null) {

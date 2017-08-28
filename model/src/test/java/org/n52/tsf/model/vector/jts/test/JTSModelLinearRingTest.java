@@ -19,16 +19,15 @@
 
 package org.n52.tsf.model.vector.jts.test;
 
+import org.codehaus.jackson.map.DeserializerFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LinearRing;
-import org.n52.tsf.model.vector.jts.AvroDeserializationHandler;
-import org.n52.tsf.model.vector.jts.AvroSerializationHandler;
-import org.n52.tsf.model.vector.jts.PBDeserializationHandler;
-import org.n52.tsf.model.vector.jts.PBSerializationHandler;
+import org.n52.tsf.model.*;
+import org.n52.tsf.model.vector.jts.locationtech.AvroDeserializationHandlerLT;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -48,76 +47,41 @@ public class JTSModelLinearRingTest {
         Files.createFile(filePath);
     }
 
+
     @Test
-    public void testSerializeGeoLinearRing() throws Exception {
+    public void testGeoLinearRingWithProtobuf() throws Exception {
         GeometryFactory geometryFactory = new GeometryFactory();
         LinearRing linearRing = geometryFactory.createLinearRing(new Coordinate[]{
                 new Coordinate(0, 0), new Coordinate(1, 0), new Coordinate(1, 1), new Coordinate(0, 0)});
         System.out.println("-------------- Serializing JTS Model LinearRing via Protobuf -------------------------");
-        PBSerializationHandler pbSerializer = new PBSerializationHandler();
-        FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
-        try {
-            pbSerializer.serialize(linearRing, output);
-        } finally {
-            output.close();
-        }
+        SerializationHandler pbSerializer = SerializationFactory.createSerializer(new FileOutputStream(Utils.TEST_FILE_LOCATION), SerializerType.PROTOBUF_SERIALIZER_LT);
+        pbSerializer.serialize(linearRing);
+        pbSerializer.close();
         assertTrue(new File(Utils.TEST_FILE_LOCATION).length() > 0);
-        System.out.println("Successfully Serialized....");
+        System.out.println("-------------- Deserializing JTS Model LinearRing via Protobuf -------------------------");
+        DeserializationHandler pbDeserializationHandler = DeserializationFactory.createDeserializer(new FileInputStream(Utils.TEST_FILE_LOCATION), DeserializerType.PROTOBUF_DESERIALIZER_LT);
+        LinearRing linearRingDeserialized = (LinearRing) pbDeserializationHandler.deserialize();
+        pbDeserializationHandler.close();
+        assertEquals(linearRing, linearRingDeserialized);
+        System.out.println("Successfully Deserialized : " + linearRingDeserialized);
     }
 
     @Test
-    public void testDeserializeGeoLinearRing() throws Exception {
-        GeometryFactory geometryFactory = new GeometryFactory();
-        LinearRing linearRing = geometryFactory.createLinearRing(new Coordinate[]{
-                new Coordinate(0, 0), new Coordinate(1, 0), new Coordinate(1, 1), new Coordinate(0, 0)});
-        PBSerializationHandler pbSerializer = new PBSerializationHandler();
-        FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
-        try {
-            pbSerializer.serialize(linearRing, output);
-            System.out.println("-------------- Deserializing JTS Model LinearRing via Protobuf -------------------------");
-            PBDeserializationHandler pbDeserializationHandler = new PBDeserializationHandler();
-            LinearRing linearRingDeserialized = (LinearRing) pbDeserializationHandler.deserialize(new FileInputStream(Utils.TEST_FILE_LOCATION));
-            assertEquals(linearRing, linearRingDeserialized);
-            System.out.println("Successfully Deserialized : " + linearRingDeserialized);
-        } finally {
-            output.close();
-        }
-    }
-
-    @Test
-    public void testSerializeGeoLinearRingWithAvro() throws Exception {
+    public void testGeoLinearRingWithAvro() throws Exception {
         GeometryFactory geometryFactory = new GeometryFactory();
         LinearRing linearRing = geometryFactory.createLinearRing(new Coordinate[]{
                 new Coordinate(0, 0), new Coordinate(1, 0), new Coordinate(1, 1), new Coordinate(0, 0)});
         System.out.println("-------------- Serializing JTS Model LinearRing via Avro -------------------------");
-        AvroSerializationHandler avroSerializer = new AvroSerializationHandler();
-        FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
-        try {
-            avroSerializer.serialize(linearRing, output);
-        } finally {
-            output.close();
-        }
+        SerializationHandler avroSerializer = SerializationFactory.createSerializer(new FileOutputStream(Utils.TEST_FILE_LOCATION), SerializerType.AVRO_SERIALIZER_LT);
+        avroSerializer.serialize(linearRing);
+        avroSerializer.close();
         assertTrue(new File(Utils.TEST_FILE_LOCATION).length() > 0);
-        System.out.println("Successfully Serialized....");
-    }
-
-    @Test
-    public void testDeserializeGeoLinearRingWithAvro() throws Exception {
-        GeometryFactory geometryFactory = new GeometryFactory();
-        LinearRing linearRing = geometryFactory.createLinearRing(new Coordinate[]{
-                new Coordinate(0, 0), new Coordinate(1, 0), new Coordinate(1, 1), new Coordinate(0, 0)});
-        AvroSerializationHandler avroSerializer = new AvroSerializationHandler();
-        FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
-        try {
-            avroSerializer.serialize(linearRing, output);
-            System.out.println("-------------- Deserializing JTS Model LinearRing via Avro -------------------------");
-            AvroDeserializationHandler avroDeserializationHandler = new AvroDeserializationHandler();
-            LinearRing linearRingDeserialized = (LinearRing) avroDeserializationHandler.deserialize(new FileInputStream(Utils.TEST_FILE_LOCATION));
-            assertEquals(linearRing, linearRingDeserialized);
-            System.out.println("Successfully Deserialized : " + linearRingDeserialized);
-        } finally {
-            output.close();
-        }
+        System.out.println("-------------- Deserializing JTS Model LinearRing via Avro -------------------------");
+        DeserializationHandler avroDeserializationHandler = DeserializationFactory.createDeserializer(new FileInputStream(Utils.TEST_FILE_LOCATION), DeserializerType.AVRO_DESERIALIZER_LT);
+        LinearRing linearRingDeserialized = (LinearRing) avroDeserializationHandler.deserialize();
+        avroDeserializationHandler.close();
+        assertEquals(linearRing, linearRingDeserialized);
+        System.out.println("Successfully Deserialized : " + linearRingDeserialized);
     }
 
     @After

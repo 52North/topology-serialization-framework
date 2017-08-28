@@ -4,10 +4,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.locationtech.jts.geom.*;
-import org.n52.tsf.model.vector.jts.AvroDeserializationHandler;
-import org.n52.tsf.model.vector.jts.AvroSerializationHandler;
-import org.n52.tsf.model.vector.jts.PBDeserializationHandler;
-import org.n52.tsf.model.vector.jts.PBSerializationHandler;
+import org.n52.tsf.model.*;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -28,85 +25,41 @@ public class JTSModelGeoCollectionTest {
     }
 
     @Test
-    public void testSerializeGeoCollection() throws Exception {
+    public void testGeoCollectionWithProtoBuf() throws Exception {
         GeometryFactory geometryFactory = new GeometryFactory();
         Polygon polygon = geometryFactory.createPolygon(new Coordinate[]{
                 new Coordinate(0, 0), new Coordinate(10, 0), new Coordinate(0, 10), new Coordinate(10, 10), new Coordinate(0, 0)});
         Point point = geometryFactory.createPoint(new Coordinate(1, 2));
         GeometryCollection geometryCollection = geometryFactory.createGeometryCollection(new Geometry[]{point, polygon});
         System.out.println("-------------- Serializing JTS Model Geometry Collection via Protobuf -------------------------");
-        PBSerializationHandler pbSerializer = new PBSerializationHandler();
-        FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
-        try {
-            pbSerializer.serialize(geometryCollection, output);
-        } finally {
-            output.close();
-        }
+        SerializationHandler pbSerializer = SerializationFactory.createSerializer(new FileOutputStream(Utils.TEST_FILE_LOCATION), SerializerType.PROTOBUF_SERIALIZER_LT);
+        pbSerializer.serialize(geometryCollection);
         assertTrue(new File(Utils.TEST_FILE_LOCATION).length() > 0);
-        System.out.println("Successfully Serialized....");
+        System.out.println("-------------- Deserializing JTS Model Geometry Collection via Protobuf ------------------------");
+        DeserializationHandler pbDeserializationHandler = DeserializationFactory.createDeserializer(new FileInputStream(Utils.TEST_FILE_LOCATION), DeserializerType.PROTOBUF_DESERIALIZER_LT);
+        GeometryCollection geoCollDeserialized = (GeometryCollection) pbDeserializationHandler.deserialize();
+        assertEquals(geometryCollection, geoCollDeserialized);
+        System.out.println("Successfully Deserialized : " + geoCollDeserialized);
     }
 
     @Test
-    public void testDeserializeGeoCollection() throws Exception {
-        GeometryFactory geometryFactory = new GeometryFactory();
-        Polygon polygon = geometryFactory.createPolygon(new Coordinate[]{
-                new Coordinate(0, 0), new Coordinate(10, 0), new Coordinate(0, 10), new Coordinate(10, 10), new Coordinate(0, 0)});
-        Point point = geometryFactory.createPoint(new Coordinate(1, 2));
-        GeometryCollection geometryCollection = geometryFactory.createGeometryCollection(new Geometry[]{point, polygon});
-        PBSerializationHandler pbSerializer = new PBSerializationHandler();
-        FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
-        try {
-            pbSerializer.serialize(geometryCollection, output);
-            System.out.println("-------------- Deserializing JTS Model Geometry Collection via Protobuf ------------------------");
-            PBDeserializationHandler pbDeserializationHandler = new PBDeserializationHandler();
-
-            GeometryCollection geoCollDeserialized = (GeometryCollection) pbDeserializationHandler.deserialize(new FileInputStream(Utils.TEST_FILE_LOCATION));
-            assertEquals(geometryCollection, geoCollDeserialized);
-            System.out.println("Successfully Deserialized : " + geoCollDeserialized);
-        } finally {
-            output.close();
-        }
-    }
-
-    @Test
-    public void testSerializeGeoCollectionWithAvro() throws Exception {
+    public void testGeoCollectionWithAvro() throws Exception {
         GeometryFactory geometryFactory = new GeometryFactory();
         Polygon polygon = geometryFactory.createPolygon(new Coordinate[]{
                 new Coordinate(0, 0), new Coordinate(10, 0), new Coordinate(0, 10), new Coordinate(10, 10), new Coordinate(0, 0)});
         Point point = geometryFactory.createPoint(new Coordinate(1, 2));
         GeometryCollection geometryCollection = geometryFactory.createGeometryCollection(new Geometry[]{point, polygon});
         System.out.println("-------------- Serializing JTS Model Geometry Collection via Avro -------------------------");
-        PBSerializationHandler pbSerializer = new PBSerializationHandler();
-        FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
-        try {
-            pbSerializer.serialize(geometryCollection, output);
-        } finally {
-            output.close();
-        }
+        SerializationHandler avroSerializer = SerializationFactory.createSerializer(new FileOutputStream(Utils.TEST_FILE_LOCATION), SerializerType.AVRO_SERIALIZER_LT);
+        avroSerializer.serialize(geometryCollection);
+        avroSerializer.close();
         assertTrue(new File(Utils.TEST_FILE_LOCATION).length() > 0);
-        System.out.println("Successfully Serialized....");
-    }
-
-    @Test
-    public void testDeserializeGeoCollectionWithAvro() throws Exception {
-        GeometryFactory geometryFactory = new GeometryFactory();
-        Polygon polygon = geometryFactory.createPolygon(new Coordinate[]{
-                new Coordinate(0, 0), new Coordinate(10, 0), new Coordinate(0, 10), new Coordinate(10, 10), new Coordinate(0, 0)});
-        Point point = geometryFactory.createPoint(new Coordinate(1, 2));
-        GeometryCollection geometryCollection = geometryFactory.createGeometryCollection(new Geometry[]{point, polygon});
-        AvroSerializationHandler avroSerializer = new AvroSerializationHandler();
-        FileOutputStream output = new FileOutputStream(Utils.TEST_FILE_LOCATION);
-        try {
-            avroSerializer.serialize(geometryCollection, output);
-            System.out.println("-------------- Deserializing JTS Model Geometry Collection via Avro ------------------------");
-            AvroDeserializationHandler avroDeserializationHandler = new AvroDeserializationHandler();
-
-            GeometryCollection geoCollDeserialized = (GeometryCollection) avroDeserializationHandler.deserialize(new FileInputStream(Utils.TEST_FILE_LOCATION));
-            assertEquals(geometryCollection, geoCollDeserialized);
-            System.out.println("Successfully Deserialized : " + geoCollDeserialized);
-        } finally {
-            output.close();
-        }
+        System.out.println("-------------- Deserializing JTS Model Geometry Collection via Avro ------------------------");
+        DeserializationHandler avroDeserializationHandler = DeserializationFactory.createDeserializer(new FileInputStream(Utils.TEST_FILE_LOCATION), DeserializerType.AVRO_DESERIALIZER_LT);
+        GeometryCollection geoCollDeserialized = (GeometryCollection) avroDeserializationHandler.deserialize();
+        avroDeserializationHandler.close();
+        assertEquals(geometryCollection, geoCollDeserialized);
+        System.out.println("Successfully Deserialized : " + geoCollDeserialized);
     }
 
     @After
